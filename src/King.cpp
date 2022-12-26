@@ -32,3 +32,7 @@ King::King(SDL_Renderer* Renderer, int pieceTeam, int xPos, int yPos)
 
 	SDL_RenderCopy(Renderer, pieceTexture, nullptr, &temp);
 }
+King::~King()
+{
+
+}

@@ -20,8 +20,6 @@ void Chess::MainRenderer()
 	SDL_Surface* Icon = IMG_Load((DIRECTORY + "icon.ico").c_str());
 	bool gameQuit = false;
 
-	int boardPosition[64];
-
 	std::vector<SDL_Texture*> pieceTextures;
 	SDL_Window* Window = SDL_CreateWindow("Chess The Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
 	SDL_Renderer* Renderer = SDL_CreateRenderer(Window, -1, SDL_RENDERER_ACCELERATED);
@@ -70,7 +68,7 @@ void Chess::MainRenderer()
 			{
 				SDL_RenderClear(Renderer);
 				SDL_RenderCopy(Renderer, Image, nullptr, &rectangle);
-				Chess::Init(Renderer, boardPosition);
+				Chess::Init(Renderer);
 				initialRun = false;
 				SDL_RenderPresent(Renderer);
 			}
@@ -89,7 +87,7 @@ void Chess::MainRenderer()
 	return;
 }
 
-void Chess::Init(SDL_Renderer* Renderer, int* const boardPosition)
+void Chess::Init(SDL_Renderer* Renderer)
 {
 	for (int x = 0; x < 8; x++)
 	{
@@ -200,14 +198,14 @@ void Chess::Init(SDL_Renderer* Renderer, int* const boardPosition)
 			else if (y == 6)
 			{
 				boardPosition[y + x * 8] = 2;
-				Pawn pawn9(Renderer, 1, x, y);
-				Pawn pawn10(Renderer, 1, x, y);
-				Pawn pawn11(Renderer, 1, x, y);
-				Pawn pawn12(Renderer, 1, x, y);
-				Pawn pawn13(Renderer, 1, x, y);
-				Pawn pawn14(Renderer, 1, x, y);
-				Pawn pawn15(Renderer, 1, x, y);
-				Pawn pawn16(Renderer, 1, x, y);
+				Pawn pawn9(Renderer, 2, x, y);
+				Pawn pawn10(Renderer, 2, x, y);
+				Pawn pawn11(Renderer, 2, x, y);
+				Pawn pawn12(Renderer, 2, x, y);
+				Pawn pawn13(Renderer, 2, x, y);
+				Pawn pawn14(Renderer, 2, x, y);
+				Pawn pawn15(Renderer, 2, x, y);
+				Pawn pawn16(Renderer, 2, x, y);
 			}
 		}
 	}
