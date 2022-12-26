@@ -19,14 +19,24 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="King.cpp" />
+    <ClCompile Include="src\Bishop.cpp" />
+    <ClCompile Include="src\King.cpp" />
+    <ClCompile Include="src\Knight.cpp" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\Pawn.cpp" />
+    <ClCompile Include="src\Queen.cpp" />
     <ClCompile Include="src\Renderer.cpp" />
+    <ClCompile Include="src\Rock.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="src\Bishop.h" />
     <ClInclude Include="src\King.h" />
+    <ClInclude Include="src\Knight.h" />
+    <ClInclude Include="src\Pawn.h" />
+    <ClInclude Include="src\Queen.h" />
     <ClInclude Include="src\Renderer.h" />
+    <ClInclude Include="src\Rock.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Chess The Game.rc" />
