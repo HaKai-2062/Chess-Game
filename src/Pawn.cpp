@@ -1,36 +1,9 @@
 #include "Pawn.h"
 
-Pawn::Pawn(SDL_Renderer* Renderer, int pieceTeam, int xPos, int yPos)
-	:m_pieceTeam(pieceTeam), m_XPos(xPos), m_YPos(yPos), m_pieceTexture(nullptr)
+Pawn::Pawn(SDL_Renderer* m_Renderer, int m_pieceTeam, int m_XPos, int m_YPos)
+	: Piece(m_Renderer, PAWN, m_pieceTeam, m_XPos, m_YPos)
 {
-	SDL_Texture* pieceTexture = nullptr;
-	if (m_pieceTeam == 1)
-	{
-		pieceTexture = IMG_LoadTexture(Renderer, (DIRECTORY + "pawn_bl.png").c_str());
-		if (!pieceTexture)
-		{
-			Chess::MissingTexture(false, "pawn_bl.png");
-			return;
-		}
-	}
-	else if (m_pieceTeam == 2)
-	{
-		pieceTexture = IMG_LoadTexture(Renderer, (DIRECTORY + "pawn.png").c_str());
-		if (!pieceTexture)
-		{
-			Chess::MissingTexture(false, "pawn.png");
-			return;
-		}
-	}
 
-	SDL_Rect temp{};
-	temp.w = WIDTH / 8;
-	temp.h = HEIGHT / 8;
-	temp.x = m_XPos * temp.w;
-	temp.y = m_YPos * temp.h;
-
-	m_pieceTexture = pieceTexture;
-	SDL_RenderCopy(Renderer, pieceTexture, nullptr, &temp);
 }
 
 Pawn::~Pawn()
@@ -38,11 +11,21 @@ Pawn::~Pawn()
 	SDL_DestroyTexture(m_pieceTexture);
 }
 
-void Pawn::calculatePossibleMoves()
+/*
+void Pawn::calculatePossibleMoves(SDL_Renderer* Renderer)
 {
 	//Render 2 blocks below
-	if (currentTurn == m_pieceTeam && m_pieceTeam == 1 && m_YPos == 1)
+	if (currentTurn == m_pieceTeam && m_pieceTeam == 1 && !hasMoved)
 	{
+		SDL_Rect temp1{};
+		temp1.w = WIDTH / 8;
+		temp1.h = HEIGHT / 8;
+		temp1.x = (m_XPos+1) * temp1.w;
+		temp1.y = (m_YPos + 1) * temp1.h;
+
+		SDL_SetRenderDrawColor(Renderer, 150, 0, 0, 100);
+		SDL_RenderFillRect(Renderer, &temp1);
+
 		//2 blocks below are checked if empty or not
 		if (boardPosition[m_XPos + (m_YPos + 1) * 8] == 0 && boardPosition[m_XPos + (m_YPos + 2) * 8] == 0)
 		{
@@ -55,7 +38,7 @@ void Pawn::calculatePossibleMoves()
 		}
 	}
 	//Render 2 blocks above
-	else if (currentTurn == m_pieceTeam && m_pieceTeam == 2 && m_YPos == 6)
+	else if (currentTurn == m_pieceTeam && m_pieceTeam == 2 && !hasMoved)
 	{
 		//2 blocks above are checked if empty or not
 		if (boardPosition[m_XPos + (m_YPos - 1) * 8] == 0 && boardPosition[m_XPos + (m_YPos - 2) * 8] == 0)
@@ -86,4 +69,7 @@ void Pawn::calculatePossibleMoves()
 
 		}
 	}
+	//waittill clicked elsewhere
+	//destroy and free textures/rects
 }
+*/

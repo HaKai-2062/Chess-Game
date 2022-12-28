@@ -1,13 +1,12 @@
 #pragma once
-#include "Renderer.h"
+#include "Piece.h"
 
-class Pawn
+class Pawn : public Piece
 {
 public:
+	//store vars from piece to bishop
 	Pawn(SDL_Renderer*, int, int, int);
+	//void DrawBishops();
+	//bool isValidMove();
 	~Pawn();
-	void calculatePossibleMoves();
-private:
-	int m_pieceTeam = 0, m_XPos = 0, m_YPos = 0;
-	SDL_Texture* m_pieceTexture = nullptr;
 };

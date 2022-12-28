@@ -1,5 +1,12 @@
-#include "Renderer.h"
 #include <iostream>
+#include "Renderer.h"
+
+#include "Pawn.h"
+#include "Knight.h"
+#include "Bishop.h"
+#include "Rook.h"
+#include "Queen.h"
+#include "King.h"
 
 /*
 |-|-|-|-|-|-|-|-|
@@ -18,9 +25,6 @@ void Chess::MainRenderer()
 		return;
 	
 	SDL_Surface* Icon = IMG_Load((DIRECTORY + "icon.ico").c_str());
-	bool gameQuit = false;
-
-	std::vector<SDL_Texture*> pieceTextures;
 	SDL_Window* Window = SDL_CreateWindow("Chess The Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
 	SDL_Renderer* Renderer = SDL_CreateRenderer(Window, -1, SDL_RENDERER_ACCELERATED);
 	SDL_SetWindowIcon(Window, Icon);
@@ -49,190 +53,115 @@ void Chess::MainRenderer()
 	rectangle.y = (HEIGHT - rectangle.h) / 2;
 
 	bool initialRun = true;
-
-	SDL_Event gameEvent;
-	while (1)
+	while (!gameQuit)
 	{
+		SDL_Event gameEvent;
 		if (SDL_WaitEvent(&gameEvent))
 		{
-			if (gameEvent.type == SDL_QUIT || gameQuit)
+			if (gameEvent.type == SDL_QUIT)
 				break;
 			else if (gameEvent.key.keysym.sym == SDLK_ESCAPE)
 				break;
 			else if (gameEvent.type == SDL_MOUSEBUTTONDOWN)
 			{
-				int blockNumber = Chess::GetBlockSelected(gameEvent.button.x, gameEvent.button.y);
-				std::cout << blockNumber<<std::endl;
+				for (int y = 0; y < 8; y++)
+				{
+					for (int x = 0; x < 8; x++)
+					{
+						int xBlockStart = (WIDTH / 8) * x;
+						//start of next block is end of first
+						int xBlockEnd = (WIDTH / 8) * (x + 1);
+
+						int yBlockStart = (HEIGHT / 8) * y;
+						int yBlockEnd = (HEIGHT / 8) * (y + 1);
+
+
+						if (gameEvent.button.x > xBlockStart && gameEvent.button.x <= xBlockEnd && gameEvent.button.y > yBlockStart && gameEvent.button.y <= yBlockEnd)
+						{ }
+					}
+				}
 			}
-			else if (initialRun)
+			if (initialRun)
 			{
 				SDL_RenderClear(Renderer);
 				SDL_RenderCopy(Renderer, Image, nullptr, &rectangle);
-				Chess::Init(Renderer);
 				initialRun = false;
+				Chess::Init(Renderer);
 				SDL_RenderPresent(Renderer);
 			}
 		}
 		SDL_Delay(10);
 	}
-
 	//Freeing resources
-	for (int i = 0; i < pieceTextures.size(); i++)
-		SDL_DestroyTexture(pieceTextures[i]);
 	SDL_DestroyTexture(Image);	
 	SDL_FreeSurface(Icon);
 	SDL_DestroyRenderer(Renderer);
 	SDL_DestroyWindow(Window);
+	SDL_Quit();
 
 	return;
 }
 
 void Chess::Init(SDL_Renderer* Renderer)
 {
-	for (int x = 0; x < 8; x++)
-	{
-		for (int y = 0; y < 8; y++)
-		{
-			//0 means no piece 1 means enemy piece 2 means friendly piece
-			boardPosition[y + x * 8] = 0;
+	//BLACK PAWN
+	Pawn* pawn1 = new Pawn(Renderer, false, 0, 1);
+	Pawn* pawn2 = new Pawn(Renderer, false, 1, 1);
+	Pawn* pawn3 = new Pawn(Renderer, false, 2, 1);
+	Pawn* pawn4 = new Pawn(Renderer, false, 3, 1);
+	Pawn* pawn5 = new Pawn(Renderer, false, 4, 1);
+	Pawn* pawn6 = new Pawn(Renderer, false, 5, 1);
+	Pawn* pawn7 = new Pawn(Renderer, false, 6, 1);
+	Pawn* pawn8 = new Pawn(Renderer, false, 7, 1);
 
-			//ROCK
-			if (y == 0 && x == 0)
-			{
-				boardPosition[y + x * 8] = 1;
-				Rock rock1(Renderer, 1, x, y);
-			}
-			else if (y == 0 && x == 7)
-			{
-				boardPosition[y + x * 8] = 1;
-				Rock rock2(Renderer, 1, x, y);
-			}
-			else if (y == 7 && x == 0 )
-			{
-				boardPosition[y + x * 8] = 2;
-				Rock rock3(Renderer, 2, x, y);
-			}
-			else if (y == 7 && x == 7)
-			{
-				boardPosition[y + x * 8] = 2;
-				Rock rock4(Renderer, 2, x, y);
-			}
+	//WHITE PAWN
+	Pawn* pawn9 = new Pawn(Renderer, true, 0, 6);
+	Pawn* pawn10 = new Pawn(Renderer, true, 1, 6);
+	Pawn* pawn11 = new Pawn(Renderer, true, 2, 6);
+	Pawn* pawn12 = new Pawn(Renderer, true, 3, 6);
+	Pawn* pawn13 = new Pawn(Renderer, true, 4, 6);
+	Pawn* pawn14 = new Pawn(Renderer, true, 5, 6);
+	Pawn* pawn15 = new Pawn(Renderer, true, 6, 6);
+	Pawn* pawn16 = new Pawn(Renderer, true, 7, 6);
 
-			//KNIGHTS
-			else if (y == 0 && x == 1)
-			{
-				boardPosition[y + x * 8] = 1;
-				Knight knight1(Renderer, 1, x, y);
-			}
-			else if (y == 0 && x == 6)
-			{
-				boardPosition[y + x * 8] = 1;
-				Knight knight2(Renderer, 1, x, y);
-			}
-			else if (y == 7 && x == 1)
-			{
-				boardPosition[y + x * 8] = 2;
-				Knight knight3(Renderer, 2, x, y);
-			}
-			else if (y == 7 && x == 6)
-			{
-				boardPosition[y + x * 8] = 2;
-				Knight knight4(Renderer, 2, x, y);
-			}
-			//BISHOPS
-			else if (y == 0 && x == 2)
-			{
-				boardPosition[y + x * 8] = 1;
-				Bishop bishop1(Renderer, 1, x, y);
-			}
-			else if (y == 0 && x == 5)
-			{
-				boardPosition[y + x * 8] = 1;
-				Bishop bishop2(Renderer, 1, x, y);
-			}
-			else if (y == 7 && x == 2)
-			{
-				boardPosition[y + x * 8] = 2;
-				Bishop bishop3(Renderer, 2, x, y);
-			}
-			else if (y == 7 && x == 5)
-			{
-				boardPosition[y + x * 8] = 2;
-				Bishop bishop4(Renderer, 2, x, y);
-			}
-			//QUEEN
-			else if (y == 0 && x == 3)
-			{
-				boardPosition[y + x * 8] = 1;
-				Queen queen1(Renderer, 1, x, y);
-			}
-			else if (y == 7 && x == 3)
-			{
-				boardPosition[y + x * 8] = 2;
-				Queen queen2(Renderer, 2, x, y);
-			}
-			//KING
-			else if (y == 0 && x == 4)
-			{
-				boardPosition[y + x * 8] = 1;
-				King king1(Renderer, 1, x, y);
-			}
-			else if (y == 7 && x == 4)
-			{
-				boardPosition[y + x * 8] = 2;
-				King king2(Renderer, 2, x, y);
-			}
-			//PAWN
-			else if (y == 1)
-			{
-				boardPosition[y + x * 8] = 1;
-				Pawn pawn1(Renderer, 1, x, y);
-				Pawn pawn2(Renderer, 1, x, y);
-				Pawn pawn3(Renderer, 1, x, y);
-				Pawn pawn4(Renderer, 1, x, y);
-				Pawn pawn5(Renderer, 1, x, y);
-				Pawn pawn6(Renderer, 1, x, y);
-				Pawn pawn7(Renderer, 1, x, y);
-				Pawn pawn8(Renderer, 1, x, y);
-			}
-			else if (y == 6)
-			{
-				boardPosition[y + x * 8] = 2;
-				Pawn pawn9(Renderer, 2, x, y);
-				Pawn pawn10(Renderer, 2, x, y);
-				Pawn pawn11(Renderer, 2, x, y);
-				Pawn pawn12(Renderer, 2, x, y);
-				Pawn pawn13(Renderer, 2, x, y);
-				Pawn pawn14(Renderer, 2, x, y);
-				Pawn pawn15(Renderer, 2, x, y);
-				Pawn pawn16(Renderer, 2, x, y);
-			}
-		}
-	}
+	//BLACK KNIGHT
+	Knight* knight1 = new Knight(Renderer, false, 1, 0);
+	Knight* knight2 = new Knight(Renderer, false, 6, 0);
+
+	//WHITE KNIGHT		  
+	Knight* knight3 = new Knight(Renderer, true, 1, 7);
+	Knight* knight4 = new Knight(Renderer, true, 6, 7);
+
+	//BLACK BISHOP
+	Bishop* bishop1 = new Bishop(Renderer, false, 2, 0);
+	Bishop* bishop2 = new Bishop(Renderer, false, 5, 0);
+
+	//WHITE BISHOP
+	Bishop* bishop3 = new Bishop(Renderer, true, 2, 7);
+	Bishop* bishop4 = new Bishop(Renderer, true, 5, 7);
+
+	//BLACK ROOK
+	Rook* rook1 = new Rook(Renderer, false, 0, 0);
+	Rook* rook2 = new Rook(Renderer, false, 7, 0);
+
+	//WHITE ROOK
+	Rook* rook3 = new Rook(Renderer, true, 0, 7);
+	Rook* rook4 = new Rook(Renderer, true, 7, 7);
+
+	//BLACK QUEEN
+	Queen* queen1 = new Queen(Renderer, false, 3, 0);
+
+	//WHITE QUEEN
+	Queen* queen2 = new Queen(Renderer, true, 3, 7);
+
+	//BLACK KING 
+	King* king1 = new King(Renderer, false, 4,0);
+
+	//WHITE KING
+	King* king2 = new King(Renderer, true, 4,7);
+
 }
 
-int Chess::GetBlockSelected(Uint16 mouseX, Uint16 mouseY)
-{
-	//returns block number from 1-64
-	for (int y = 0; y < 8; y++)
-	{
-		for (int x = 0; x < 8; x++)
-		{
-			int xBlockStart = (WIDTH / 8) * x;
-			//start of next block is end of first
-			int xBlockEnd = (WIDTH / 8) * (x + 1);
-
-			int yBlockStart = (HEIGHT / 8) * y;
-			int yBlockEnd = (HEIGHT / 8) * (y + 1);
-
-
-			if (mouseX > xBlockStart && mouseX <= xBlockEnd && mouseY > yBlockStart && mouseY <= yBlockEnd)
-				return (x+y*8)+1;
-		}
-	}
-	//invalid selection
-	return 69;
-}
 
 void Chess::MissingTexture(bool gameQuit, std::string filename)
 {

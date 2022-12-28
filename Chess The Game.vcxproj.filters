@@ -27,7 +27,7 @@
     <ClCompile Include="src\Queen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Rock.cpp">
+    <ClCompile Include="src\Rook.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Knight.cpp">
@@ -37,6 +37,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Pawn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Piece.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,16 +56,19 @@
     <ClInclude Include="src\Queen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Rock.h">
+    <ClInclude Include="src\Rook.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Knight.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Bishop.h">
+    <ClInclude Include="src\Pawn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Pawn.h">
+    <ClInclude Include="src\Piece.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Bishop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

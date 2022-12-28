@@ -24,9 +24,10 @@
     <ClCompile Include="src\Knight.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Pawn.cpp" />
+    <ClCompile Include="src\Piece.cpp" />
     <ClCompile Include="src\Queen.cpp" />
     <ClCompile Include="src\Renderer.cpp" />
-    <ClCompile Include="src\Rock.cpp" />
+    <ClCompile Include="src\Rook.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -34,9 +35,10 @@
     <ClInclude Include="src\King.h" />
     <ClInclude Include="src\Knight.h" />
     <ClInclude Include="src\Pawn.h" />
+    <ClInclude Include="src\Piece.h" />
     <ClInclude Include="src\Queen.h" />
     <ClInclude Include="src\Renderer.h" />
-    <ClInclude Include="src\Rock.h" />
+    <ClInclude Include="src\Rook.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Chess The Game.rc" />
