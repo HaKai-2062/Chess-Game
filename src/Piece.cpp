@@ -1,8 +1,16 @@
 #include "Piece.h"
 #include <iostream>
 
-Piece::Piece(SDL_Renderer* Renderer, PieceType pieceType, int pieceTeam, int xPos, int yPos)
+Piece::Piece(SDL_Renderer* Renderer, PieceType pieceType, bool pieceTeam, int xPos, int yPos)
 	:m_Renderer(Renderer), m_pieceType(pieceType), m_pieceTeam(pieceTeam), m_XPos(xPos), m_YPos(yPos)
+{
+	RenderThePiece(Renderer, pieceType, pieceTeam, xPos, yPos);
+}
+Piece::~Piece()
+{
+	SDL_DestroyTexture(this->m_pieceTexture);
+}
+void Piece::RenderThePiece(SDL_Renderer* Renderer, const PieceType& pieceType, const bool& pieceTeam, const int& xPos, const int& yPos)
 {
 	//Rendering Piece
 	std::string fileName = "";
@@ -31,7 +39,7 @@ Piece::Piece(SDL_Renderer* Renderer, PieceType pieceType, int pieceTeam, int xPo
 	}
 
 	if (!m_pieceTeam)
-		m_pieceTexture = IMG_LoadTexture(Renderer, (DIRECTORY + fileName+"_bl.png").c_str());
+		m_pieceTexture = IMG_LoadTexture(Renderer, (DIRECTORY + fileName + "_bl.png").c_str());
 	else
 		m_pieceTexture = IMG_LoadTexture(Renderer, (DIRECTORY + fileName + ".png").c_str());
 
@@ -40,7 +48,7 @@ Piece::Piece(SDL_Renderer* Renderer, PieceType pieceType, int pieceTeam, int xPo
 		if (!m_pieceTeam)
 			Chess::MissingTexture(false, fileName + "_bl.png");
 		else
-			Chess::MissingTexture(false, fileName+".png");
+			Chess::MissingTexture(false, fileName + ".png");
 		return;
 	}
 	SDL_Rect pieceRect{};
@@ -50,11 +58,4 @@ Piece::Piece(SDL_Renderer* Renderer, PieceType pieceType, int pieceTeam, int xPo
 	pieceRect.y = m_YPos * pieceRect.h;
 
 	SDL_RenderCopy(Renderer, m_pieceTexture, nullptr, &pieceRect);
-
-	//Store the position and team/type in PieceInfo
-	//PieceInfo boardPosition[xPos][yPos] = 0;
-}
-Piece::~Piece()
-{
-	SDL_DestroyTexture(m_pieceTexture);
 }
