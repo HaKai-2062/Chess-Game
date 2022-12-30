@@ -5,10 +5,10 @@ class Queen : public Piece
 {
 public:
 	//store vars from piece to bishop
-	Queen(SDL_Renderer*, bool, int, int);
+	Queen(SDL_Renderer*, bool, float, float);
 	//void DrawBishops();
 	//bool isValidMove();
 	~Queen();
 
-	void RenderPossibleMoves(SDL_Renderer*, const bool&, const int&, const int&) { };
+	void RenderPossibleMoves(SDL_Renderer*, const int&, const int&, bool&) { };
 };

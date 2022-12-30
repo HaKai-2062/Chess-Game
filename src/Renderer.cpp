@@ -19,16 +19,20 @@
 |-|-|-|-|-|-|-|-|
 */
 
-void MouseButtonPressed(SDL_Renderer*, bool& hasRenderedPossMove, const SDL_Event&, SDL_Texture*, SDL_Window*, const SDL_Rect&);
+void MouseButtonPressed(SDL_Renderer*, bool& hasRenderedPossMove, const SDL_Event&, SDL_Texture*, const SDL_Rect&, bool&);
 void FreeAllHeapMemory();
 
 //must declare it here because cant really return it
 Piece** boardPosition = new Piece * [64];
+//must declare here or else it doesnt remember ehhhh
+Piece* pieceClicked = nullptr;
 
 void Chess::MainRenderer()
 {
 	bool gameQuit = false;
 	bool hasRenderedPossMoves = false;
+	//true = white false = black
+	bool currentTurn = true;
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		return;
@@ -63,6 +67,7 @@ void Chess::MainRenderer()
 
 	bool initialRun = true;
 	SDL_Event gameEvent;
+	SDL_SetRenderDrawBlendMode(Renderer, SDL_BLENDMODE_BLEND);
 	while (!gameQuit)
 	{
 		if (SDL_WaitEvent(&gameEvent))
@@ -79,21 +84,13 @@ void Chess::MainRenderer()
 				initialRun = false;
 				Chess::Init(Renderer);
 				SDL_RenderPresent(Renderer);
-				SDL_UpdateWindowSurface(Window);
 			}
 
 			if (gameEvent.type == SDL_MOUSEBUTTONDOWN)
 			{
-				SDL_SetRenderDrawBlendMode(Renderer, SDL_BLENDMODE_BLEND);
-				MouseButtonPressed(Renderer, hasRenderedPossMoves, gameEvent, Image, Window, rectangle);
-				SDL_RenderPresent(Renderer);
-				SDL_UpdateWindowSurface(Window);
+				MouseButtonPressed(Renderer, hasRenderedPossMoves, gameEvent, Image, rectangle, currentTurn);
 			}
-			/*
-			else
-			{
-				Chess::RenderAllPiece(Renderer, boardPosition);
-			}*/
+
 
 		}
 		SDL_Delay(10);
@@ -243,8 +240,17 @@ void Chess::RenderAllPiece(SDL_Renderer* Renderer)
 	}
 }
 
+int Chess::GetBlockX(const int& blockNumber)
+{
+	return blockNumber % 8;
+}
 
-void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, const SDL_Event& gameEvent, SDL_Texture* Image, SDL_Window* Window, const SDL_Rect& rectangle)
+int Chess::GetBlockY(const int& blockNumber)
+{
+	return blockNumber / 8;
+}
+
+void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, const SDL_Event& gameEvent, SDL_Texture* Image, const SDL_Rect& rectangle, bool& currentTurn)
 {
 	for (int y = 0; y < 8; y++)
 	{
@@ -260,45 +266,85 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 			//if Moves havent been rendered yet then render them
 			if (gameEvent.button.x > xBlockStart && gameEvent.button.x <= xBlockEnd && gameEvent.button.y > yBlockStart && gameEvent.button.y <= yBlockEnd)
 			{
-				if (boardPosition[x + (y * 8)])
+				//clicked where some piece is present and piece belong to currentTurn's team
+				if (boardPosition[x + (y * 8)] && boardPosition[x + (y * 8)]->GetPieceTeam() == currentTurn)
 				{
 					//Clear and Rerender pieces if they had any renderedPossMoves before
 					SDL_RenderClear(Renderer);
+					//Destroy All piece texture to free all the memory leaks
+					for (int i = 0; i < 64; i++)
+					{
+						if (boardPosition[i])
+						{
+							SDL_DestroyTexture(boardPosition[i]->GetTexture());
+							boardPosition[i]->PossibleMovesVector().clear();
+						}
+					}
+					//No need to destroy Image texture since we are not making new sdl_texture* for it. Just clearing and Rerendering
 					SDL_RenderCopy(Renderer, Image, nullptr, &rectangle);
 					Chess::RenderAllPiece(Renderer);
-					SDL_RenderPresent(Renderer);
-					SDL_UpdateWindowSurface(Window);
-
+					
+					//clear any previous rendered position in the vector
+					if (pieceClicked)
+					{
+						pieceClicked->PossibleMovesVector().clear();
+						pieceClicked = nullptr;
+					}
+					
 					//This is set to Pawn only to avoid bugs atm
 					if (boardPosition[x + (y * 8)]->GetPieceType() == 0)
+					{
 						hasRenderedPossMoves = true;
+						pieceClicked = boardPosition[x + (y * 8)];
+					}
+					
+					boardPosition[x + (y * 8)]->RenderPossibleMoves(Renderer, x, y, currentTurn);
 
-					//White Turn
-					if (currentTurn == boardPosition[x + (y * 8)]->GetPieceTeam())
-						boardPosition[x + (y * 8)]->RenderPossibleMoves(Renderer, 1, x, y);
-					//Black Turn
-					else
-						boardPosition[x + (y * 8)]->RenderPossibleMoves(Renderer, 0, x, y);
-
+					SDL_RenderPresent(Renderer);
 					//break out of both loops
 					y = 8;
 					break;
 				}
+				//clicked where no piece is present
 				else if (hasRenderedPossMoves)
 				{
+					if (pieceClicked)
+					{
+						for (int z = 0; z < pieceClicked->PossibleMovesVector().size(); z++)
+						{
+							//if block cliked is same as rendered block
+							if (pieceClicked->PossibleMovesVector()[z] == (x + (y * 8)))
+							{
+								pieceClicked->MoveThePiece(Renderer, Image, boardPosition, (x + (y * 8)), currentTurn);
+								//no need to loop anymore
+								break;
+							}
+						}
+						pieceClicked->PossibleMovesVector().clear();
+						pieceClicked = nullptr;
+					}
+
 					//Clear and Rerender pieces if they had any renderedPossMoves before
 					SDL_RenderClear(Renderer);
+					//Destroy All piece texture to free all the memory leaks
+					for (int i = 0; i < 64; i++)
+					{
+						if (boardPosition[i])
+						{
+							SDL_DestroyTexture(boardPosition[i]->GetTexture());
+							boardPosition[i]->PossibleMovesVector().clear();
+						}
+					}
+					//No need to destroy Image texture since we are not making new sdl_texture* for it. Just clearing and Rerendering
 					SDL_RenderCopy(Renderer, Image, nullptr, &rectangle);
 					Chess::RenderAllPiece(Renderer);
 					SDL_RenderPresent(Renderer);
-					SDL_UpdateWindowSurface(Window);
 					hasRenderedPossMoves = false;
 
 					//break out of both loops
 					y = 8;
 					break;
 				}
-				//std::cout << "MY NAME IS " << boardPosition[x][y]->GetPieceType()<<" from " << boardPosition[x][y]->GetPieceX()<<"," << boardPosition[x][y]->GetPieceY()<< std::endl;
 			}
 		}
 	}

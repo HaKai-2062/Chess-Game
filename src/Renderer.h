@@ -20,14 +20,13 @@ namespace Chess
 	void MainRenderer();
 	void Init(SDL_Renderer*);
 	void MissingTexture(bool, std::string);
-	int GetBlockSelected(Uint16, Uint16);
 	Piece** GetBoardPos();
 	void RenderAllPiece(SDL_Renderer*);
+
+	int GetBlockX(const int&);
+	int GetBlockY(const int&);
 }
 
 static const int WIDTH = 800;
 static const int HEIGHT = 800;
 static const std::string DIRECTORY = "Resoucre Files/";
-
-//true = white false = enemy
-static bool currentTurn = false;
