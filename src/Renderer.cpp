@@ -74,7 +74,7 @@ void Chess::MainRenderer()
 		{
 			if (gameEvent.type == SDL_QUIT)
 				break;
-			else if (gameEvent.key.keysym.sym == SDLK_ESCAPE)
+			else if (gameEvent.type == SDL_KEYUP && gameEvent.key.keysym.sym == SDLK_ESCAPE)
 				break;
 
 			if (initialRun)
@@ -172,7 +172,6 @@ void Chess::Init(SDL_Renderer* Renderer)
 		boardPosition[i] = nullptr;
 	}
 
-
 	//------------X + (Y*W)------------//
 	boardPosition[0 + (1*8)] = pawn1;
 	boardPosition[1 + (1*8)] = pawn2;
@@ -217,7 +216,6 @@ void Chess::Init(SDL_Renderer* Renderer)
 	boardPosition[4 + (0*8)] = king1;
 
 	boardPosition[4 + (7*8)] = king2;
-
 }
 
 Piece** Chess::GetBoardPos()
@@ -297,7 +295,7 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 						hasRenderedPossMoves = true;
 						pieceClicked = boardPosition[x + (y * 8)];
 					}
-					
+
 					boardPosition[x + (y * 8)]->RenderPossibleMoves(Renderer, x, y, currentTurn);
 
 					SDL_RenderPresent(Renderer);

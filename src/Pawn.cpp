@@ -108,7 +108,7 @@ void Pawn::RenderPossibleMoves(SDL_Renderer* Renderer, const int& x, const int& 
 		}
 	}
 
-	//Render the possible Moves here
+	//Render the possible Moves Box here
 	for (int i = 0; i < this->PossibleMovesVector().size(); i++)
 	{
 		SDL_Rect temp1{ Chess::GetBlockX(this->PossibleMovesVector()[i]) * (WIDTH / 8), Chess::GetBlockY(this->PossibleMovesVector()[i]) * (HEIGHT / 8),  WIDTH / 8 , HEIGHT / 8 };

@@ -121,11 +121,15 @@ void Piece::MoveThePiece(SDL_Renderer* Renderer, SDL_Texture* Image, Piece** boa
 		Chess::RenderAllPiece(Renderer);
 		SDL_RenderPresent(Renderer);
 	}
+
+	std::cout << (int)(xEnd + (yEnd * 8) )<< std::endl;
+	std::cout << (int)(xStart + (yStart * 8)) << std::endl;
+
 	//if piece exists then destroy it
 	if (boardPosition[(int)(xEnd + (yEnd * 8))])
 	{
 		delete boardPosition[(int)(xEnd + (yEnd * 8))];
-		std::cout << "destroyed" << std::endl;
+		std::cout << "Destroyed the piece :x" << std::endl;
 	}
 	//assign new position to the piece
 	boardPosition[(int)(xEnd + (yEnd * 8))] = boardPosition[(int)(xStart + (yStart * 8))];
