@@ -19,30 +19,16 @@ void Knight::RenderPossibleMoves(SDL_Renderer* Renderer)
 	int x = static_cast<int>(this->GetPieceX());
 	int y = static_cast<int>(this->GetPieceY());
 
+	int arrayX[8] = { x+2, x+2, x+1, x+1, x-1, x-1, x-2, x-2 };
+	int arrayY[8] = { y+1, y-1, y+2, y-2, y+2, y-2, y+1, y-1 };
 
-	if((x + 2 < 8 && y + 1 < 8) && (!boardPosition[(x + 2) + ((y + 1) * 8)] || (boardPosition[(x + 2) + ((y + 1) * 8)] && boardPosition[(x + 2) + ((y + 1) * 8)]->GetPieceTeam() != this->GetPieceTeam())))
-		this->PossibleMovesVector().push_back((x + 2) + ((y + 1) * 8));
-
-	if ((x + 2 < 8 && y - 1 > -1) && (!boardPosition[(x + 2) + ((y - 1) * 8)] || (boardPosition[(x + 2) + ((y - 1) * 8)] && boardPosition[(x + 2) + ((y - 1) * 8)]->GetPieceTeam() != this->GetPieceTeam())))
-		this->PossibleMovesVector().push_back((x + 2) + ((y - 1) * 8));
-
-	if ((x - 2 > -1 && y + 1 < 8) && (!boardPosition[(x - 2) + ((y + 1) * 8)] || (boardPosition[(x - 2) + ((y + 1) * 8)] && boardPosition[(x - 2) + ((y + 1) * 8)]->GetPieceTeam() != this->GetPieceTeam())))
-		this->PossibleMovesVector().push_back((x - 2) + ((y + 1) * 8));
-
-	if ((x - 2 > -1 && y - 1 > -1) && (!boardPosition[(x - 2) + ((y - 1) * 8)] || (boardPosition[(x - 2) + ((y - 1) * 8)] && boardPosition[(x - 2) + ((y - 1) * 8)]->GetPieceTeam() != this->GetPieceTeam())))
-		this->PossibleMovesVector().push_back((x - 2) + ((y - 1) * 8));
-
-	if ((x + 1 < 8 && y - 2 > -1) && (!boardPosition[(x + 1) + ((y - 2) * 8)] || (boardPosition[(x + 1) + ((y - 2) * 8)] && boardPosition[(x + 1) + ((y - 2) * 8)]->GetPieceTeam() != this->GetPieceTeam())))
-		this->PossibleMovesVector().push_back((x +1) + ((y - 2) * 8));
-
-	if ((x + 1 < 8 && y + 2 < 8) && (!boardPosition[(x + 1) + ((y + 2) * 8)] || (boardPosition[(x + 1) + ((y + 2) * 8)] && boardPosition[(x + 1) + ((y + 2) * 8)]->GetPieceTeam() != this->GetPieceTeam())))
-		this->PossibleMovesVector().push_back((x + 1) + ((y + 2) * 8));
-
-	if ((x - 1 > -1 && y -2 > -1) && (!boardPosition[(x - 1) + ((y - 2) * 8)] || (boardPosition[(x - 1) + ((y - 2) * 8)] && boardPosition[(x - 1) + ((y - 2) * 8)]->GetPieceTeam() != this->GetPieceTeam())))
-		this->PossibleMovesVector().push_back((x - 1) + ((y - 2) * 8));
-
-	if ((x - 1 > -1 && y + 2 < 8) && (!boardPosition[(x - 1) + ((y + 2) * 8)] || (boardPosition[(x - 1) + ((y + 2) * 8)] && boardPosition[(x - 1) + ((y + 2) * 8)]->GetPieceTeam() != this->GetPieceTeam())))
-		this->PossibleMovesVector().push_back((x - 1) + ((y + 2) * 8));
-
+	for (int i = 0; i < 8; i++)
+	{
+		if (arrayX[i] > -1 && arrayX[i] < 8 && arrayY[i] > -1 && arrayY[i] < 8)
+		{
+			if (!boardPosition[arrayX[i] + arrayY[i] * 8] || (boardPosition[arrayX[i] + arrayY[i] * 8]->GetPieceTeam() != this->GetPieceTeam()))
+				this->PossibleMovesVector().push_back(arrayX[i] + arrayY[i] * 8);
+		}
+	}
 	this->RenderPossMovesBlock(Renderer);
 }

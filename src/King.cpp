@@ -19,7 +19,6 @@ void King::RenderPossibleMoves(SDL_Renderer* Renderer)
 	int y = static_cast<int>(this->GetPieceY());
 
 	int arrayX[8] = { x, x, x-1, x+1, x+1, x+1, x-1, x-1};
-
 	int arrayY[8] = { y+1, y-1, y, y, y+1, y-1, y+1, y-1};
 
 	for (int i = 0; i < 8; i++)
