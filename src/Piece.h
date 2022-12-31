@@ -1,5 +1,6 @@
 #pragma once
 #include "Renderer.h"
+#include <iostream>
 
 enum PieceType { PAWN = 0, KNIGHT = 1, BISHOP = 2, ROOK = 3, QUEEN = 4, KING = 5 };
 
@@ -17,10 +18,11 @@ public:
 	SDL_Texture* GetTexture() { return this->m_pieceTexture; }
 	
 	void RenderThePiece(SDL_Renderer*, const PieceType&, const bool&, const float&, const float&);
+	void RenderPossMovesBlock(SDL_Renderer*);
 	void MoveThePiece(SDL_Renderer*, SDL_Texture*, int, bool&);
 
 	//every derived class must have these functions
-	virtual void RenderPossibleMoves(SDL_Renderer*, int, int, bool&) = 0;
+	virtual void RenderPossibleMoves(SDL_Renderer*) = 0;
 	//virtual void calculatePossibleMoves(SDL_Renderer*, const bool&, const int&, const int&) = 0;
 	//virtual bool isValidMove() = 0;
 	//virtual void moveThePiece(int, int) = 0;

@@ -1,5 +1,4 @@
 #include "Pawn.h"
-#include <iostream>
 
 Pawn::Pawn(SDL_Renderer* m_Renderer, bool m_pieceTeam, float m_XPos, float m_YPos)
 	: Piece(m_Renderer, PAWN, m_pieceTeam, m_XPos, m_YPos)
@@ -12,18 +11,15 @@ Pawn::~Pawn()
 	SDL_DestroyTexture(this->GetTexture());
 }
 
-void Pawn::RenderPossibleMoves(SDL_Renderer* Renderer, int x, int y, bool& currentTurn)
+void Pawn::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
-	if (currentTurn != this->GetPieceTeam())
-	{
-		std::cout << "Not your turn matey ;)" << std::endl;
-		return;
-	}
-
 	Piece** const boardPosition = Chess::GetBoardPos();
 
+	int x = static_cast<int>(this->GetPieceX());
+	int y = static_cast<int>(this->GetPieceY());
+
 	//Render Black Pawn Moves
-	if (currentTurn == this->GetPieceTeam() && !this->GetPieceTeam())
+	if (!this->GetPieceTeam())
 	{
 		//if next block is empty
 		if ((y + 1) < 8 && !boardPosition[x + ((y + 1) * 8)])
@@ -48,7 +44,7 @@ void Pawn::RenderPossibleMoves(SDL_Renderer* Renderer, int x, int y, bool& curre
 	}
 
 	//Render White Pawn Moves
-	else if (currentTurn == this->GetPieceTeam() && this->GetPieceTeam())
+	else if (this->GetPieceTeam())
 	{
 		//only the next block seems empty
 		if ((y - 1) > -1 && !boardPosition[x + ((y - 1) * 8)])
@@ -71,12 +67,5 @@ void Pawn::RenderPossibleMoves(SDL_Renderer* Renderer, int x, int y, bool& curre
 			this->PossibleMovesVector().push_back((x - 1) + ((y - 1) * 8));
 		}
 	}
-
-	//Render the possible Moves Box here
-	for (int i = 0; i < this->PossibleMovesVector().size(); i++)
-	{
-		SDL_Rect temp1{ Chess::GetBlockX(this->PossibleMovesVector()[i]) * (WIDTH / 8), Chess::GetBlockY(this->PossibleMovesVector()[i]) * (HEIGHT / 8),  WIDTH / 8 , HEIGHT / 8 };
-		SDL_SetRenderDrawColor(Renderer, 0, 255, 25, 128);
-		SDL_RenderFillRect(Renderer, &temp1);
-	}
+	this->RenderPossMovesBlock(Renderer);
 }

@@ -122,3 +122,14 @@ void Piece::MoveThePiece(SDL_Renderer* Renderer, SDL_Texture* Image, int boardPo
 	//change the turn
 	currentTurn = !currentTurn;
 }
+
+void Piece::RenderPossMovesBlock(SDL_Renderer* Renderer)
+{
+	//Render the possible Moves Box here
+	for (int i = 0; i < this->PossibleMovesVector().size(); i++)
+	{
+		SDL_Rect temp1{ Chess::GetBlockX(this->PossibleMovesVector()[i]) * (WIDTH / 8), Chess::GetBlockY(this->PossibleMovesVector()[i]) * (HEIGHT / 8),  WIDTH / 8 , HEIGHT / 8 };
+		SDL_SetRenderDrawColor(Renderer, 0, 255, 25, 128);
+		SDL_RenderFillRect(Renderer, &temp1);
+	}
+}

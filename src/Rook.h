@@ -10,5 +10,5 @@ public:
 	//bool isValidMove();
 	~Rook();
 
-	void RenderPossibleMoves(SDL_Renderer*, int, int, bool&) { };
+	void RenderPossibleMoves(SDL_Renderer*);
 };
