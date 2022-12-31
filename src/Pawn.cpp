@@ -12,26 +12,28 @@ Pawn::~Pawn()
 	SDL_DestroyTexture(this->GetTexture());
 }
 
-void Pawn::RenderPossibleMoves(SDL_Renderer* Renderer, const int& x, const int& y, bool& currentTurn)
+void Pawn::RenderPossibleMoves(SDL_Renderer* Renderer, int x, int y, bool& currentTurn)
 {
 	if (currentTurn != this->GetPieceTeam())
+	{
+		std::cout << "Not your turn matey ;)" << std::endl;
 		return;
+	}
 
-	Piece** boardPosition = Chess::GetBoardPos();
+	Piece** const boardPosition = Chess::GetBoardPos();
 
 	//Render Black Pawn Moves
-	if (currentTurn == this->GetPieceTeam() && !this->GetPieceTeam() && !(this->HasPieceMoved()))
+	if (currentTurn == this->GetPieceTeam() && !this->GetPieceTeam())
 	{
-		//2 blocks below are checked if empty or not
-		if ((y + 2) < 8 && !boardPosition[x + ((y + 1) * 8)] && !boardPosition[x + ((y + 2) * 8)])
+		//if next block is empty
+		if ((y + 1) < 8 && !boardPosition[x + ((y + 1) * 8)])
 		{
 			this->PossibleMovesVector().push_back(x + (y + 1) * 8);
-			this->PossibleMovesVector().push_back(x + (y + 2) * 8);
 		}
-		//only the next block seems empty
-		else if ((y + 1) < 8 && !boardPosition[x + ((y + 1) * 8)])
+		//2 blocks below are checked if empty or not and piece shouldnt have moved
+		if ((y + 2) < 8 && !boardPosition[x + ((y + 1) * 8)] && !boardPosition[x + ((y + 2) * 8)] && !(this->HasPieceMoved()))
 		{
-			this->PossibleMovesVector().push_back(x + (y + 1) * 8);
+			this->PossibleMovesVector().push_back(x + (y + 2) * 8);
 		}
 		//found enemy piece on right
 		if ((y + 1) < 8 && (x + 1) < 8 && boardPosition[(x + 1) + (y + 1) * 8] && boardPosition[(x + 1) + (y + 1) * 8]->GetPieceTeam())
@@ -39,70 +41,32 @@ void Pawn::RenderPossibleMoves(SDL_Renderer* Renderer, const int& x, const int& 
 			this->PossibleMovesVector().push_back((x + 1) + ((y + 1) * 8));
 		}
 		//found enemy piece on left
-		if ((y + 1) < 8 && (x - 1) >= 0 && boardPosition[(x - 1) + (y + 1) * 8] && boardPosition[(x - 1) + (y + 1) * 8]->GetPieceTeam())
+		if ((y + 1) < 8 && (x - 1) > -1 && boardPosition[(x - 1) + (y + 1) * 8] && boardPosition[(x - 1) + (y + 1) * 8]->GetPieceTeam())
 		{
 			this->PossibleMovesVector().push_back((x - 1) + ((y + 1) * 8));
 		}
 	}
 
 	//Render White Pawn Moves
-	else if (currentTurn == this->GetPieceTeam() && this->GetPieceTeam() && !(this->HasPieceMoved()))
-	{
-		//2 blocks above are checked if empty or not
-		if ((y - 2) >= 0 && !boardPosition[x + ((y - 1) * 8)] && !boardPosition[x + ((y - 2) * 8)])
-		{
-			this->PossibleMovesVector().push_back(x + (y - 1) * 8);
-			this->PossibleMovesVector().push_back(x + (y - 2) * 8);
-		}
-		//only the next block seems empty
-		else if ((y - 1) >= 0 && !boardPosition[x + ((y - 1) * 8)])
-		{
-			this->PossibleMovesVector().push_back(x + (y - 1) * 8);
-		}
-		//found enemy piece on right
-		if ((y - 1) >= 0 && (x + 1) < 8 && boardPosition[(x + 1) + (y - 1) * 8] && !boardPosition[(x + 1) + (y - 1) * 8]->GetPieceTeam())
-		{
-			this->PossibleMovesVector().push_back((x + 1) + ((y - 1) * 8));
-		}
-		//found enemy piece on left
-		if ((y - 1) >= 0 && (x - 1) >= 0 && boardPosition[(x - 1) + (y - 1) * 8] && !boardPosition[(x - 1) + (y - 1) * 8]->GetPieceTeam())
-		{
-			this->PossibleMovesVector().push_back((x - 1) + ((y - 1) * 8));
-		}
-	}
-
-	//Black's Normal Move and no piece below
-	else if (currentTurn == this->GetPieceTeam() && !this->GetPieceTeam())
-	{
-		if ((y + 1) < 8 && !boardPosition[x + (y + 1) * 8])
-		{
-			this->PossibleMovesVector().push_back(x + (y + 1) * 8);
-		}
-		//found enemy piece on right
-		if ((y + 1) < 8 && (x + 1) < 8 && boardPosition[(x + 1) + (y + 1) * 8] && boardPosition[(x + 1) + (y + 1) * 8]->GetPieceTeam())
-		{
-			this->PossibleMovesVector().push_back((x + 1) + ((y + 1) * 8));
-		}
-		//found enemy piece on right
-		if ((y + 1) < 8 && (x - 1) >= 0 && boardPosition[(x - 1) + (y + 1) * 8] && boardPosition[(x - 1) + (y + 1) * 8]->GetPieceTeam())
-		{
-			this->PossibleMovesVector().push_back((x - 1) + ((y + 1) * 8));
-		}
-	}
-	//White's Normal Move and no piece above
 	else if (currentTurn == this->GetPieceTeam() && this->GetPieceTeam())
 	{
-		if ((y - 1) >= 0 && !boardPosition[x + (y - 1) * 8])
+		//only the next block seems empty
+		if ((y - 1) > -1 && !boardPosition[x + ((y - 1) * 8)])
 		{
 			this->PossibleMovesVector().push_back(x + (y - 1) * 8);
 		}
+		//2 blocks above are checked if empty or not
+		if ((y - 2) > -1 && !boardPosition[x + ((y - 1) * 8)] && !boardPosition[x + ((y - 2) * 8)] && !(this->HasPieceMoved()))
+		{
+			this->PossibleMovesVector().push_back(x + (y - 2) * 8);
+		}
 		//found enemy piece on right
-		if ((y - 1) >= 0 && (x + 1) < 8 && boardPosition[(x + 1) + (y - 1) * 8] && !boardPosition[(x + 1) + (y - 1) * 8]->GetPieceTeam())
+		if ((y - 1) > -1 && (x + 1) < 8 && boardPosition[(x + 1) + (y - 1) * 8] && !boardPosition[(x + 1) + (y - 1) * 8]->GetPieceTeam())
 		{
 			this->PossibleMovesVector().push_back((x + 1) + ((y - 1) * 8));
 		}
 		//found enemy piece on left
-		if ((y - 1) >= 0 && (x -1) >= 0 && boardPosition[(x - 1) + (y - 1) * 8] && !boardPosition[(x - 1) + (y - 1) * 8]->GetPieceTeam())
+		if ((y - 1) > -1 && (x - 1) > -1 && boardPosition[(x - 1) + (y - 1) * 8] && !boardPosition[(x - 1) + (y - 1) * 8]->GetPieceTeam())
 		{
 			this->PossibleMovesVector().push_back((x - 1) + ((y - 1) * 8));
 		}

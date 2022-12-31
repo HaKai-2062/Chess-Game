@@ -25,6 +25,7 @@ namespace Chess
 
 	int GetBlockX(const int&);
 	int GetBlockY(const int&);
+	float Lerp(const int&, const int&, const float&);
 }
 
 static const int WIDTH = 800;

@@ -63,78 +63,61 @@ void Piece::RenderThePiece(SDL_Renderer* Renderer, const PieceType& pieceType, c
 	SDL_RenderCopy(Renderer, m_pieceTexture, nullptr, &pieceRect);
 }
 
-void Piece::MoveThePiece(SDL_Renderer* Renderer, SDL_Texture* Image, Piece** boardPosition, int boardPositionToMove, bool& currentTurn)
+void Piece::MoveThePiece(SDL_Renderer* Renderer, SDL_Texture* Image, int boardPositionToMove, bool& currentTurn)
 {
 	if (currentTurn != this->GetPieceTeam())
 		return;
 
+	Piece** const boardPosition = Chess::GetBoardPos();
+	
 	this->m_hasMoved = true;
 
-	float xStart = (float)this->GetPieceX();
-	float yStart = (float)this->GetPieceY();
+	int xStart = static_cast<int>(this->GetPieceX());
+	int yStart = static_cast<int>(this->GetPieceY());
 
-	float xEnd = (float)Chess::GetBlockX(boardPositionToMove);
-	float yEnd = (float)Chess::GetBlockY(boardPositionToMove);
+	int xEnd = Chess::GetBlockX(boardPositionToMove);
+	int yEnd = Chess::GetBlockY(boardPositionToMove);
 
-	bool xDiffIncrease = true;
-	bool yDiffIncrease = true;
+	// Set the number of steps for the animation
+	float steps = 16.0f;
+	
+	// Calculate the x and y step sizes for the animation
+	float xStep = (xEnd - xStart) / steps;
+	float yStep = (yEnd - yStart) / steps;
 
-
-	if (xEnd - xStart < 0)
-		xDiffIncrease = false;
-
-	if (yEnd - yStart < 0)
-		yDiffIncrease = false;
-
-
-	float diff = 0.0f;
-
-	//a simple lerp function that runs for 10 times
-	while (1)
+	for (int i = 0; i < steps; i++)
 	{
-		if (diff > 1.0f)
-			break;
-
-		diff = diff + 0.1f;
-
-		if (xStart != xEnd)
-			this->m_XPos = xStart + (xEnd - xStart) * diff;
-
-		if (yStart != yEnd)
-			this->m_YPos = yStart + (yEnd - yStart) * diff;
+		this->AddToX(xStep);
+		this->AddToY(yStep);
 
 		//Destroy All piece texture to free all the memory leaks
-		for (int i = 0; i < 64; i++)
+		for (int j = 0; j < 64; j++)
 		{
-			if (boardPosition[i])
+			if (boardPosition[j])
 			{
-				SDL_DestroyTexture(boardPosition[i]->GetTexture());
-				boardPosition[i]->PossibleMovesVector().clear();
+				SDL_DestroyTexture(boardPosition[j]->GetTexture());
+				boardPosition[j]->PossibleMovesVector().clear();
 			}
 		}
-
-		SDL_Rect rectangle{ 0, 0, WIDTH / 2, HEIGHT / 2 };
-		SDL_QueryTexture(Image, nullptr, nullptr, &rectangle.w, &rectangle.h);
 		//The piece is rerenderer here
 		SDL_RenderClear(Renderer);
+		SDL_Rect rectangle{ 0, 0, WIDTH / 2, HEIGHT / 2 };
+		SDL_QueryTexture(Image, nullptr, nullptr, &rectangle.w, &rectangle.h);
 		SDL_RenderCopy(Renderer, Image, nullptr, &rectangle);
 		Chess::RenderAllPiece(Renderer);
 		SDL_RenderPresent(Renderer);
 	}
 
-	std::cout << (int)(xEnd + (yEnd * 8) )<< std::endl;
-	std::cout << (int)(xStart + (yStart * 8)) << std::endl;
+	int startPosition = xStart + (yStart * 8);
+	int endPosition = xEnd + (yEnd * 8);
 
 	//if piece exists then destroy it
-	if (boardPosition[(int)(xEnd + (yEnd * 8))])
-	{
-		delete boardPosition[(int)(xEnd + (yEnd * 8))];
-		std::cout << "Destroyed the piece :x" << std::endl;
-	}
+	if (boardPosition[endPosition])
+		delete boardPosition[endPosition];
 	//assign new position to the piece
-	boardPosition[(int)(xEnd + (yEnd * 8))] = boardPosition[(int)(xStart + (yStart * 8))];
+	boardPosition[endPosition] = boardPosition[startPosition];
 	//set prev piece position to null
-	boardPosition[(int)(xStart + (yStart * 8))] = nullptr;
+	boardPosition[startPosition] = nullptr;
 
 	//change the turn
 	currentTurn = !currentTurn;

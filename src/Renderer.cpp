@@ -223,6 +223,12 @@ Piece** Chess::GetBoardPos()
 	return boardPosition;
 }
 
+// Linearly interpolates between two values a and b by the interpolant t.
+float Chess::Lerp(const int& a, const int& b, const float& t)
+{
+	return a + ((b - a) * t);
+}
+
 
 void Chess::RenderAllPiece(SDL_Renderer* Renderer)
 {
@@ -268,25 +274,28 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 				if (boardPosition[x + (y * 8)] && boardPosition[x + (y * 8)]->GetPieceTeam() == currentTurn)
 				{
 					//Clear and Rerender pieces if they had any renderedPossMoves before
-					SDL_RenderClear(Renderer);
-					//Destroy All piece texture to free all the memory leaks
-					for (int i = 0; i < 64; i++)
+					if (hasRenderedPossMoves)
 					{
-						if (boardPosition[i])
+						SDL_RenderClear(Renderer);
+						//Destroy All piece texture to free all the memory leaks
+						for (int i = 0; i < 64; i++)
 						{
-							SDL_DestroyTexture(boardPosition[i]->GetTexture());
-							boardPosition[i]->PossibleMovesVector().clear();
+							if (boardPosition[i])
+							{
+								SDL_DestroyTexture(boardPosition[i]->GetTexture());
+								boardPosition[i]->PossibleMovesVector().clear();
+							}
 						}
-					}
-					//No need to destroy Image texture since we are not making new sdl_texture* for it. Just clearing and Rerendering
-					SDL_RenderCopy(Renderer, Image, nullptr, &rectangle);
-					Chess::RenderAllPiece(Renderer);
-					
-					//clear any previous rendered position in the vector
-					if (pieceClicked)
-					{
-						pieceClicked->PossibleMovesVector().clear();
-						pieceClicked = nullptr;
+						//No need to destroy Image texture since we are not making new sdl_texture* for it. Just clearing and Rerendering
+						SDL_RenderCopy(Renderer, Image, nullptr, &rectangle);
+						Chess::RenderAllPiece(Renderer);
+
+						//clear any previous rendered position in the vector
+						if (pieceClicked)
+						{
+							pieceClicked->PossibleMovesVector().clear();
+							pieceClicked = nullptr;
+						}
 					}
 					
 					//This is set to Pawn only to avoid bugs atm
@@ -294,9 +303,8 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 					{
 						hasRenderedPossMoves = true;
 						pieceClicked = boardPosition[x + (y * 8)];
+						pieceClicked->RenderPossibleMoves(Renderer, x, y, currentTurn);
 					}
-
-					boardPosition[x + (y * 8)]->RenderPossibleMoves(Renderer, x, y, currentTurn);
 
 					SDL_RenderPresent(Renderer);
 					//break out of both loops
@@ -313,7 +321,7 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 							//if block cliked is same as rendered block
 							if (pieceClicked->PossibleMovesVector()[z] == (x + (y * 8)))
 							{
-								pieceClicked->MoveThePiece(Renderer, Image, boardPosition, (x + (y * 8)), currentTurn);
+								pieceClicked->MoveThePiece(Renderer, Image, (x + (y * 8)), currentTurn);
 								//no need to loop anymore
 								break;
 							}
@@ -337,8 +345,8 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 					SDL_RenderCopy(Renderer, Image, nullptr, &rectangle);
 					Chess::RenderAllPiece(Renderer);
 					SDL_RenderPresent(Renderer);
-					hasRenderedPossMoves = false;
 
+					hasRenderedPossMoves = false;
 					//break out of both loops
 					y = 8;
 					break;
