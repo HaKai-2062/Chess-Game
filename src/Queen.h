@@ -10,5 +10,5 @@ public:
 	//bool isValidMove();
 	~Queen();
 
-	void RenderPossibleMoves(SDL_Renderer*) { };
+	void RenderPossibleMoves(SDL_Renderer*);
 };
