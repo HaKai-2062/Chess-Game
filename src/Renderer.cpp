@@ -298,13 +298,9 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 						}
 					}
 					
-					//This is set to Pawn only to avoid bugs atm
-					if (boardPosition[x + (y * 8)]->GetPieceType() == 0 || boardPosition[x + (y * 8)]->GetPieceType() == 3)
-					{
-						hasRenderedPossMoves = true;
-						pieceClicked = boardPosition[x + (y * 8)];
-						pieceClicked->RenderPossibleMoves(Renderer);
-					}
+					hasRenderedPossMoves = true;
+					pieceClicked = boardPosition[x + (y * 8)];
+					pieceClicked->RenderPossibleMoves(Renderer);
 
 					SDL_RenderPresent(Renderer);
 					//break out of both loops
