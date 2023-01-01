@@ -8,7 +8,10 @@ Knight::Knight(SDL_Renderer * m_Renderer, bool m_pieceTeam, float m_XPos, float 
 
 Knight::~Knight()
 {
-	SDL_DestroyTexture(this->GetTexture());
+	SDL_DestroyTexture(this->GetPieceTexture());
+	SDL_FreeRW(this->GetPieceRW());
+	SDL_FreeSurface(this->GetPieceSurface());
+	this->PossibleMovesVector().clear();
 }
 
 void Knight::RenderPossibleMoves(SDL_Renderer* Renderer)

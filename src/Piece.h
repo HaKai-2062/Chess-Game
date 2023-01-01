@@ -12,14 +12,16 @@ public:
 	bool GetPieceTeam() { return this->m_pieceTeam; }
 	float GetPieceX() { return this->m_XPos; }
 	float GetPieceY() { return this->m_YPos; }
+	SDL_Texture* GetPieceTexture() { return this->m_pieceTexture; }
+	SDL_RWops* GetPieceRW() { return this->m_pieceRW; }
+	SDL_Surface* GetPieceSurface() { return this->m_pieceSurface; }
 	void AddToX(const float& x) { this->m_XPos = this->m_XPos + x; }
 	void AddToY(const float& y) { this->m_YPos = this->m_YPos + y; }
 	std::vector<int>& PossibleMovesVector() { return this->m_possMoves; }
-	SDL_Texture* GetTexture() { return this->m_pieceTexture; }
 	
 	void RenderThePiece(SDL_Renderer*, const PieceType&, const bool&, const float&, const float&);
 	void RenderPossMovesBlock(SDL_Renderer*);
-	void MoveThePiece(SDL_Renderer*, SDL_Texture*, int, bool&);
+	void MoveThePiece(SDL_Renderer*, int, bool&);
 
 	//every derived class must have these functions
 	virtual void RenderPossibleMoves(SDL_Renderer*) = 0;
@@ -35,6 +37,8 @@ public:
 
 private:
 	SDL_Renderer* m_Renderer = nullptr;
+	SDL_RWops* m_pieceRW = nullptr;
+	SDL_Surface* m_pieceSurface = nullptr;
 	SDL_Texture* m_pieceTexture = nullptr;
 	PieceType m_pieceType = PAWN;
 	std::vector<int> m_possMoves;

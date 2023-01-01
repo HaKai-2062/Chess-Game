@@ -8,6 +8,8 @@
 #include "Queen.h"
 #include "King.h"
 
+#include "C_Files/icon.c"
+
 /*
 |-|-|-|-|-|-|-|-|
 |-|-|-|-|-|-|-|-|
@@ -19,7 +21,7 @@
 |-|-|-|-|-|-|-|-|
 */
 
-void MouseButtonPressed(SDL_Renderer*, bool& hasRenderedPossMove, const SDL_Event&, SDL_Texture*, const SDL_Rect&, bool&);
+void MouseButtonPressed(SDL_Renderer*, bool& hasRenderedPossMove, const SDL_Event&, bool&);
 void FreeAllHeapMemory();
 
 //must declare it here because cant really return it
@@ -36,38 +38,28 @@ void Chess::MainRenderer()
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		return;
-	
-	SDL_Surface* Icon = IMG_Load((DIRECTORY + "icon.ico").c_str());
-	SDL_Window* Window = SDL_CreateWindow("Chess The Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
-	SDL_Renderer* Renderer = SDL_CreateRenderer(Window, -1, SDL_RENDERER_ACCELERATED);
-	SDL_SetWindowIcon(Window, Icon);
 
-	//ChessBoard
-	SDL_Texture* Image = IMG_LoadTexture(Renderer, (DIRECTORY+"chessboard.png").c_str());
-	if (!Image)
-	{
-		MissingTexture(gameQuit, "chessboard.png");
-		gameQuit = true;
-		return;
-	}
-	if (!Icon)
+	SDL_RWops* iconRW = SDL_RWFromMem((void*)icon_ico, sizeof(icon_ico));
+	SDL_Surface* iconSurface = IMG_Load_RW(iconRW, 1);
+	if (!iconSurface)
 	{
 		MissingTexture(gameQuit, "icon.ico");
 		gameQuit = true;
 		return;
 	}
 
-	//Centering Image
-	SDL_Rect rectangle{};
-	rectangle.w = 0;
-	rectangle.h = 0;
-	SDL_QueryTexture(Image, nullptr, nullptr, &rectangle.w, &rectangle.h);
-	rectangle.x = (WIDTH - rectangle.w) / 2;
-	rectangle.y = (HEIGHT - rectangle.h) / 2;
+	SDL_Window* Window = SDL_CreateWindow("Chess The Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
+	SDL_Renderer* Renderer = SDL_CreateRenderer(Window, -1, SDL_RENDERER_ACCELERATED);
+	SDL_SetWindowIcon(Window, iconSurface);
+	SDL_SetRenderDrawBlendMode(Renderer, SDL_BLENDMODE_BLEND);
+
+	//ChessBoard
+	SDL_RenderClear(Renderer);
+	Chess::DrawChessBoard(Renderer);
+	SDL_RenderPresent(Renderer);
 
 	bool initialRun = true;
 	SDL_Event gameEvent;
-	SDL_SetRenderDrawBlendMode(Renderer, SDL_BLENDMODE_BLEND);
 	while (!gameQuit)
 	{
 		if (SDL_WaitEvent(&gameEvent))
@@ -76,11 +68,11 @@ void Chess::MainRenderer()
 				break;
 			else if (gameEvent.type == SDL_KEYUP && gameEvent.key.keysym.sym == SDLK_ESCAPE)
 				break;
-
+			
 			if (initialRun)
 			{
 				SDL_RenderClear(Renderer);
-				SDL_RenderCopy(Renderer, Image, nullptr, &rectangle);
+				Chess::DrawChessBoard(Renderer);
 				initialRun = false;
 				Chess::Init(Renderer);
 				SDL_RenderPresent(Renderer);
@@ -88,24 +80,19 @@ void Chess::MainRenderer()
 
 			if (gameEvent.type == SDL_MOUSEBUTTONDOWN)
 			{
-				MouseButtonPressed(Renderer, hasRenderedPossMoves, gameEvent, Image, rectangle, currentTurn);
+				MouseButtonPressed(Renderer, hasRenderedPossMoves, gameEvent, currentTurn);
 			}
-
-
 		}
 		SDL_Delay(10);
 	}
 
 	//Freeing resources
 	FreeAllHeapMemory();
-
-	SDL_DestroyTexture(Image);	
-	SDL_FreeSurface(Icon);
+	SDL_FreeRW(iconRW);
+	SDL_FreeSurface(iconSurface);
 	SDL_DestroyRenderer(Renderer);
 	SDL_DestroyWindow(Window);
 	SDL_Quit();
-
-	return;
 }
 
 void Chess::Init(SDL_Renderer* Renderer)
@@ -254,7 +241,7 @@ int Chess::GetBlockY(const int& blockNumber)
 	return blockNumber / 8;
 }
 
-void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, const SDL_Event& gameEvent, SDL_Texture* Image, const SDL_Rect& rectangle, bool& currentTurn)
+void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, const SDL_Event& gameEvent, bool& currentTurn)
 {
 	for (int y = 0; y < 8; y++)
 	{
@@ -277,17 +264,8 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 					if (hasRenderedPossMoves)
 					{
 						SDL_RenderClear(Renderer);
-						//Destroy All piece texture to free all the memory leaks
-						for (int i = 0; i < 64; i++)
-						{
-							if (boardPosition[i])
-							{
-								SDL_DestroyTexture(boardPosition[i]->GetTexture());
-								boardPosition[i]->PossibleMovesVector().clear();
-							}
-						}
-						//No need to destroy Image texture since we are not making new sdl_texture* for it. Just clearing and Rerendering
-						SDL_RenderCopy(Renderer, Image, nullptr, &rectangle);
+						Chess::DestroyAllPieceTextures();
+						Chess::DrawChessBoard(Renderer);
 						Chess::RenderAllPiece(Renderer);
 
 						//clear any previous rendered position in the vector
@@ -301,8 +279,8 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 					hasRenderedPossMoves = true;
 					pieceClicked = boardPosition[x + (y * 8)];
 					pieceClicked->RenderPossibleMoves(Renderer);
-
 					SDL_RenderPresent(Renderer);
+
 					//break out of both loops
 					y = 8;
 					break;
@@ -317,7 +295,7 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 							//if block cliked is same as rendered block
 							if (pieceClicked->PossibleMovesVector()[z] == (x + (y * 8)))
 							{
-								pieceClicked->MoveThePiece(Renderer, Image, (x + (y * 8)), currentTurn);
+								pieceClicked->MoveThePiece(Renderer, (x + (y * 8)), currentTurn);
 								//no need to loop anymore
 								break;
 							}
@@ -328,17 +306,8 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 
 					//Clear and Rerender pieces if they had any renderedPossMoves before
 					SDL_RenderClear(Renderer);
-					//Destroy All piece texture to free all the memory leaks
-					for (int i = 0; i < 64; i++)
-					{
-						if (boardPosition[i])
-						{
-							SDL_DestroyTexture(boardPosition[i]->GetTexture());
-							boardPosition[i]->PossibleMovesVector().clear();
-						}
-					}
-					//No need to destroy Image texture since we are not making new sdl_texture* for it. Just clearing and Rerendering
-					SDL_RenderCopy(Renderer, Image, nullptr, &rectangle);
+					Chess::DestroyAllPieceTextures();
+					Chess::DrawChessBoard(Renderer);
 					Chess::RenderAllPiece(Renderer);
 					SDL_RenderPresent(Renderer);
 
@@ -357,7 +326,8 @@ void FreeAllHeapMemory()
 	for (int i = 0; i < 64; i++)
 	{
 		//piece object deleted
-		delete boardPosition[i];
+		if (boardPosition[i])
+			delete boardPosition[i];
 	}
 	delete[] boardPosition;
 }
@@ -367,4 +337,37 @@ void Chess::MissingTexture(bool gameQuit, std::string filename)
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Missing Textures", ("Could not find " + filename + "\nMake sure you have \"Resource Files\" folder\nand all the required textures").c_str(), NULL);
 	gameQuit = true;
 	return;
+}
+
+void Chess::DrawChessBoard(SDL_Renderer* Renderer)
+{
+	//Render the possible Moves Box here
+	for (int x = 0; x < 8; x++)
+	{
+		for (int y = 0; y < 8; y++)
+		{
+			SDL_Rect temp1{ x * (WIDTH / 8), y * (HEIGHT / 8),  WIDTH / 8 , HEIGHT / 8 };
+			if ((y % 2) == (x+(y*8)) % 2)
+				SDL_SetRenderDrawColor(Renderer, 235, 236, 208, 255);
+			else
+				SDL_SetRenderDrawColor(Renderer, 119, 149, 86, 255);
+
+			SDL_RenderFillRect(Renderer, &temp1);
+		}
+	}
+}
+
+void Chess::DestroyAllPieceTextures()
+{
+	//Destroy All piece texture to free all the memory leaks
+	for (int i = 0; i < 64; i++)
+	{
+		if (boardPosition[i])
+		{
+			SDL_DestroyTexture(boardPosition[i]->GetPieceTexture());
+			SDL_FreeRW(boardPosition[i]->GetPieceRW());
+			SDL_FreeSurface(boardPosition[i]->GetPieceSurface());
+			boardPosition[i]->PossibleMovesVector().clear();
+		}
+	}
 }

@@ -8,7 +8,10 @@ King::King(SDL_Renderer* m_Renderer, bool m_pieceTeam, float m_XPos, float m_YPo
 
 King::~King()
 {
-	SDL_DestroyTexture(this->GetTexture());
+	SDL_DestroyTexture(this->GetPieceTexture());
+	SDL_FreeRW(this->GetPieceRW());
+	SDL_FreeSurface(this->GetPieceSurface());
+	this->PossibleMovesVector().clear();
 }
 
 void King::RenderPossibleMoves(SDL_Renderer* Renderer)

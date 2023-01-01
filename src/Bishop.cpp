@@ -8,7 +8,10 @@ Bishop::Bishop(SDL_Renderer* m_Renderer, bool m_pieceTeam, float m_XPos, float m
 
 Bishop::~Bishop()
 {
-	SDL_DestroyTexture(this->GetTexture());
+	SDL_DestroyTexture(this->GetPieceTexture());
+	SDL_FreeRW(this->GetPieceRW());
+	SDL_FreeSurface(this->GetPieceSurface());
+	this->PossibleMovesVector().clear();
 }
 
 void Bishop::RenderPossibleMoves(SDL_Renderer* Renderer)
@@ -18,100 +21,48 @@ void Bishop::RenderPossibleMoves(SDL_Renderer* Renderer)
 	int x = static_cast<int>(this->GetPieceX());
 	int y = static_cast<int>(this->GetPieceY());
 
-	//Render Top Right Moves
-	int tempX = x + 1;	//increament
-	int tempY = y - 1;	//decrement
+	int arrayX[4] = {x + 1, x + 1, x - 1, x - 1};
+	int arrayY[4] = {y + 1, y - 1, y + 1, y - 1};
 
-	while (tempX < 8 && tempY > -1)
+	for (int i = 0; i < 4; i++)
 	{
-		//no piece present
-		if (!boardPosition[tempX + (tempY * 8)])
-			this->PossibleMovesVector().push_back(tempX + (tempY * 8));
-		//if enemy piece present
-		else if (boardPosition[tempX + (tempY * 8)] && boardPosition[tempX + (tempY * 8)]->GetPieceTeam() != this->GetPieceTeam())
+		while (arrayX[i] > -1 && arrayX[i] < 8 && arrayY[i] > -1 && arrayY[i] < 8)
 		{
-			this->PossibleMovesVector().push_back(tempX + (tempY * 8));
-			//no need to loop further in row
-			break;
+			//no piece present
+			if (!boardPosition[arrayX[i] + (arrayY[i] * 8)])
+				this->PossibleMovesVector().push_back(arrayX[i] + (arrayY[i] * 8));
+			//if enemy piece present
+			else if (boardPosition[arrayX[i] + (arrayY[i] * 8)] && boardPosition[arrayX[i] + (arrayY[i] * 8)]->GetPieceTeam() != this->GetPieceTeam())
+			{
+				this->PossibleMovesVector().push_back(arrayX[i] + (arrayY[i] * 8));
+				//no need to loop further in row
+				break;
+			}
+			//same team so break loop
+			else if (boardPosition[arrayX[i] + (arrayY[i] * 8)] && boardPosition[arrayX[i] + (arrayY[i] * 8)]->GetPieceTeam() == this->GetPieceTeam())
+				break;
+
+			if (i == 0)
+			{
+				arrayX[i]++;
+				arrayY[i]++;
+			}
+			else if (i == 1)
+			{
+				arrayX[i]++;
+				arrayY[i]--;
+			}
+			else if (i == 2)
+			{
+				arrayX[i]--;
+				arrayY[i]++;
+			}
+			else
+			{
+				arrayX[i]--;
+				arrayY[i]--;
+			}
 		}
-		//same team so break loop
-		else if (boardPosition[tempX + (tempY * 8)] && boardPosition[tempX + (tempY * 8)]->GetPieceTeam() == this->GetPieceTeam())
-			break;
-
-		tempX++;
-		tempY--;
-	}
-
-	//Render Top Left Moves
-	tempX = x - 1;	//decrement
-	tempY = y - 1;	//decrement
-
-	while (tempX > -1 && tempY > -1)
-	{
-		//no piece present
-		if (!boardPosition[tempX + (tempY * 8)])
-			this->PossibleMovesVector().push_back(tempX + (tempY * 8));
-		//if enemy piece present
-		else if (boardPosition[tempX + (tempY * 8)] && boardPosition[tempX + (tempY * 8)]->GetPieceTeam() != this->GetPieceTeam())
-		{
-			this->PossibleMovesVector().push_back(tempX + (tempY * 8));
-			//no need to loop further in row
-			break;
-		}
-		//same team so break loop
-		else if (boardPosition[tempX + (tempY * 8)] && boardPosition[tempX + (tempY * 8)]->GetPieceTeam() == this->GetPieceTeam())
-			break;
-
-		tempX--;
-		tempY--;
-	}
-
-	//Render Botttom Right Moves
-	tempX = x + 1;	//increament
-	tempY = y + 1;	//increament
-
-	while (tempX < 8 && tempY < 8)
-	{
-		//no piece present
-		if (!boardPosition[tempX + (tempY * 8)])
-			this->PossibleMovesVector().push_back(tempX + (tempY * 8));
-		//if enemy piece present
-		else if (boardPosition[tempX + (tempY * 8)] && boardPosition[tempX + (tempY * 8)]->GetPieceTeam() != this->GetPieceTeam())
-		{
-			this->PossibleMovesVector().push_back(tempX + (tempY * 8));
-			//no need to loop further in row
-			break;
-		}
-		//same team so break loop
-		else if (boardPosition[tempX + (tempY * 8)] && boardPosition[tempX + (tempY * 8)]->GetPieceTeam() == this->GetPieceTeam())
-			break;
-
-		tempX++;
-		tempY++;
-	}
-
-	//Render Botttom Leftt Moves
-	tempX = x - 1;	//decreament
-	tempY = y + 1;	//increament
-
-	while (tempX > -1 && tempY < 8)
-	{
-		//no piece present
-		if (!boardPosition[tempX + (tempY * 8)])
-			this->PossibleMovesVector().push_back(tempX + (tempY * 8));
-		//if enemy piece present
-		else if (boardPosition[tempX + (tempY * 8)] && boardPosition[tempX + (tempY * 8)]->GetPieceTeam() != this->GetPieceTeam())
-		{
-			this->PossibleMovesVector().push_back(tempX + (tempY * 8));
-			//no need to loop further in row
-			break;
-		}
-		//same team so break loop
-		else if (boardPosition[tempX + (tempY * 8)] && boardPosition[tempX + (tempY * 8)]->GetPieceTeam() == this->GetPieceTeam())
-			break;
-
-		tempX--;
-		tempY++;
 	}
 
 	this->RenderPossMovesBlock(Renderer);

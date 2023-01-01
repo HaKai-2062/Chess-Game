@@ -22,6 +22,8 @@ namespace Chess
 	void MissingTexture(bool, std::string);
 	Piece** GetBoardPos();
 	void RenderAllPiece(SDL_Renderer*);
+	void DrawChessBoard(SDL_Renderer*);
+	void DestroyAllPieceTextures();
 
 	int GetBlockX(const int&);
 	int GetBlockY(const int&);
@@ -30,4 +32,3 @@ namespace Chess
 
 static const int WIDTH = 800;
 static const int HEIGHT = 800;
-static const std::string DIRECTORY = "Resoucre Files/";

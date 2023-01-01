@@ -2,6 +2,20 @@
 #include <iostream>
 #include <cmath>
 
+#include "C_Files/bishop.c"
+#include "C_Files/king.c"
+#include "C_Files/knight.c"
+#include "C_Files/pawn.c"
+#include "C_Files/queen.c"
+#include "C_Files/rook.c"
+
+#include "C_Files/bishop_bl.c"
+#include "C_Files/king_bl.c"
+#include "C_Files/knight_bl.c"
+#include "C_Files/pawn_bl.c"
+#include "C_Files/queen_bl.c"
+#include "C_Files/rook_bl.c"
+
 Piece::Piece(SDL_Renderer* Renderer, PieceType pieceType, bool pieceTeam, float xPos, float yPos)
 	:m_Renderer(Renderer), m_pieceType(pieceType), m_pieceTeam(pieceTeam), m_XPos(xPos), m_YPos(yPos)
 {
@@ -9,7 +23,9 @@ Piece::Piece(SDL_Renderer* Renderer, PieceType pieceType, bool pieceTeam, float 
 }
 Piece::~Piece()
 {
-	SDL_DestroyTexture(this->m_pieceTexture);
+	SDL_DestroyTexture(this->GetPieceTexture());
+	SDL_FreeRW(this->GetPieceRW());
+	SDL_FreeSurface(this->GetPieceSurface());
 	this->PossibleMovesVector().clear();
 }
 
@@ -21,39 +37,72 @@ void Piece::RenderThePiece(SDL_Renderer* Renderer, const PieceType& pieceType, c
 	{
 	case PAWN:
 		fileName = "pawn";
+		if (!this->m_pieceTeam)
+			this->m_pieceRW = SDL_RWFromMem((void*)pawn_bl_png, sizeof(pawn_bl_png));
+		else
+			this->m_pieceRW = SDL_RWFromMem((void*)pawn_png, sizeof(pawn_png));
 		break;
 	case KNIGHT:
 		fileName = "knight";
+		if (!this->m_pieceTeam)
+			this->m_pieceRW = SDL_RWFromMem((void*)knight_bl_png, sizeof(knight_bl_png));
+		else
+			this->m_pieceRW = SDL_RWFromMem((void*)knight_png, sizeof(knight_png));
 		break;
 	case BISHOP:
 		fileName = "bishop";
+		if (!this->m_pieceTeam)
+			this->m_pieceRW = SDL_RWFromMem((void*)bishop_bl_png, sizeof(bishop_bl_png));
+		else
+			this->m_pieceRW = SDL_RWFromMem((void*)bishop_png, sizeof(bishop_png));
 		break;
 	case ROOK:
 		fileName = "rook";
+		if (!this->m_pieceTeam)
+			this->m_pieceRW = SDL_RWFromMem((void*)rook_bl_png, sizeof(rook_bl_png));
+		else
+			this->m_pieceRW = SDL_RWFromMem((void*)rook_png, sizeof(rook_png));
 		break;
 	case QUEEN:
 		fileName = "queen";
+		if (!this->m_pieceTeam)
+			this->m_pieceRW = SDL_RWFromMem((void*)queen_bl_png, sizeof(queen_bl_png));
+		else
+			this->m_pieceRW = SDL_RWFromMem((void*)queen_png, sizeof(queen_png));
 		break;
 	case KING:
 		fileName = "king";
+		if (!this->m_pieceTeam)
+			this->m_pieceRW = SDL_RWFromMem((void*)king_bl_png, sizeof(king_bl_png));
+		else
+			this->m_pieceRW = SDL_RWFromMem((void*)king_png, sizeof(king_png));
 		break;
 	default:
 		break;
 	}
-
-	if (!this->m_pieceTeam)
-		this->m_pieceTexture = IMG_LoadTexture(Renderer, (DIRECTORY + fileName + "_bl.png").c_str());
-	else
-		this->m_pieceTexture = IMG_LoadTexture(Renderer, (DIRECTORY + fileName + ".png").c_str());
-
-	if (!this->m_pieceTexture)
+	//SDL_Surface* is set here
+	this->m_pieceSurface = IMG_Load_RW(this->m_pieceRW, 1);
+	if (!this->m_pieceSurface)
 	{
+		std::cout << "surf error\n";
 		if (!this->m_pieceTeam)
 			Chess::MissingTexture(false, fileName + "_bl.png");
 		else
 			Chess::MissingTexture(false, fileName + ".png");
 		return;
 	}
+	//SDL_Texture* is set here
+	this->m_pieceTexture = SDL_CreateTextureFromSurface(Renderer, this->m_pieceSurface);
+	if (!this->m_pieceTexture)
+	{
+		std::cout << "texture error\n";
+		if (!this->m_pieceTeam)
+			Chess::MissingTexture(false, fileName + "_bl.png");
+		else
+			Chess::MissingTexture(false, fileName + ".png");
+		return;
+	}
+
 	SDL_Rect pieceRect{};
 	pieceRect.w = WIDTH / 8;
 	pieceRect.h = HEIGHT / 8;
@@ -63,7 +112,7 @@ void Piece::RenderThePiece(SDL_Renderer* Renderer, const PieceType& pieceType, c
 	SDL_RenderCopy(Renderer, m_pieceTexture, nullptr, &pieceRect);
 }
 
-void Piece::MoveThePiece(SDL_Renderer* Renderer, SDL_Texture* Image, int boardPositionToMove, bool& currentTurn)
+void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& currentTurn)
 {
 	if (currentTurn != this->GetPieceTeam())
 		return;
@@ -90,20 +139,10 @@ void Piece::MoveThePiece(SDL_Renderer* Renderer, SDL_Texture* Image, int boardPo
 		this->AddToX(xStep);
 		this->AddToY(yStep);
 
-		//Destroy All piece texture to free all the memory leaks
-		for (int j = 0; j < 64; j++)
-		{
-			if (boardPosition[j])
-			{
-				SDL_DestroyTexture(boardPosition[j]->GetTexture());
-				boardPosition[j]->PossibleMovesVector().clear();
-			}
-		}
 		//The piece is rerenderer here
 		SDL_RenderClear(Renderer);
-		SDL_Rect rectangle{ 0, 0, WIDTH / 2, HEIGHT / 2 };
-		SDL_QueryTexture(Image, nullptr, nullptr, &rectangle.w, &rectangle.h);
-		SDL_RenderCopy(Renderer, Image, nullptr, &rectangle);
+		Chess::DestroyAllPieceTextures();
+		Chess::DrawChessBoard(Renderer);
 		Chess::RenderAllPiece(Renderer);
 		SDL_RenderPresent(Renderer);
 	}
@@ -125,11 +164,17 @@ void Piece::MoveThePiece(SDL_Renderer* Renderer, SDL_Texture* Image, int boardPo
 
 void Piece::RenderPossMovesBlock(SDL_Renderer* Renderer)
 {
+	Piece** const boardPosition = Chess::GetBoardPos();
 	//Render the possible Moves Box here
 	for (int i = 0; i < this->PossibleMovesVector().size(); i++)
 	{
 		SDL_Rect temp1{ Chess::GetBlockX(this->PossibleMovesVector()[i]) * (WIDTH / 8), Chess::GetBlockY(this->PossibleMovesVector()[i]) * (HEIGHT / 8),  WIDTH / 8 , HEIGHT / 8 };
-		SDL_SetRenderDrawColor(Renderer, 0, 255, 25, 128);
+		//enemy piece found
+		if (boardPosition[this->PossibleMovesVector()[i]] && boardPosition[this->PossibleMovesVector()[i]]->GetPieceTeam() != this->GetPieceTeam())
+			SDL_SetRenderDrawColor(Renderer, 255, 20, 25, 96);
+		//empty piece found
+		else
+			SDL_SetRenderDrawColor(Renderer, 0, 255, 25, 96);
 		SDL_RenderFillRect(Renderer, &temp1);
 	}
 }

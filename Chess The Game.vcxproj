@@ -41,10 +41,10 @@
     <ClInclude Include="src\Rook.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Chess The Game.rc" />
+    <ResourceCompile Include="Chess The Game1.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="x64\Release\Resouce Files\icon.ico" />
+    <Image Include="Resoucre Files\icon.ico" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
