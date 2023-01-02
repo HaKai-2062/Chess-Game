@@ -12,11 +12,14 @@ public:
 	bool GetPieceTeam() { return this->m_pieceTeam; }
 	float GetPieceX() { return this->m_XPos; }
 	float GetPieceY() { return this->m_YPos; }
+	void AddToX(const float& x) { this->m_XPos = this->m_XPos + x; }
+	void AddToY(const float& y) { this->m_YPos = this->m_YPos + y; }
+
+	void GetMyKingPosition();
+
 	SDL_Texture* GetPieceTexture() { return this->m_pieceTexture; }
 	SDL_RWops* GetPieceRW() { return this->m_pieceRW; }
 	SDL_Surface* GetPieceSurface() { return this->m_pieceSurface; }
-	void AddToX(const float& x) { this->m_XPos = this->m_XPos + x; }
-	void AddToY(const float& y) { this->m_YPos = this->m_YPos + y; }
 	std::vector<int>& PossibleMovesVector() { return this->m_possMoves; }
 	
 	void RenderThePiece(SDL_Renderer*, const PieceType&, const bool&, const float&, const float&);
@@ -25,6 +28,8 @@ public:
 
 	//every derived class must have these functions
 	virtual void RenderPossibleMoves(SDL_Renderer*) = 0;
+	virtual std::vector<int> CalculatePossibleMoves() = 0;
+	void CalculateMovesIfInCheck();
 	//virtual void calculatePossibleMoves(SDL_Renderer*, const bool&, const int&, const int&) = 0;
 	//virtual bool isValidMove() = 0;
 	//virtual void moveThePiece(int, int) = 0;
@@ -35,6 +40,12 @@ public:
 		:m_Renderer(piece.m_Renderer), m_pieceType(piece.m_pieceType), m_pieceTeam(piece.m_pieceTeam), m_XPos(piece.m_XPos), m_YPos(piece.m_YPos) {};
 	~Piece();
 
+protected:
+	static bool isBlackInCheck;
+	static bool isWhiteInCheck;
+	static int blackKingPos;
+	static int whiteKingPos;
+
 private:
 	SDL_Renderer* m_Renderer = nullptr;
 	SDL_RWops* m_pieceRW = nullptr;
@@ -42,8 +53,9 @@ private:
 	SDL_Texture* m_pieceTexture = nullptr;
 	PieceType m_pieceType = PAWN;
 	std::vector<int> m_possMoves;
+
+	float m_XPos = 0, m_YPos = 0;
 	//true = white
 	bool m_pieceTeam = false;
 	bool m_hasMoved = false;
-	float m_XPos = 0, m_YPos = 0;
 };

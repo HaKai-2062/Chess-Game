@@ -16,13 +16,20 @@ Bishop::~Bishop()
 
 void Bishop::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
+	this->CalculatePossibleMoves();
+	this->CalculateMovesIfInCheck();
+	this->RenderPossMovesBlock(Renderer);
+}
+
+std::vector<int> Bishop::CalculatePossibleMoves()
+{
 	Piece** const boardPosition = Chess::GetBoardPos();
 
 	int x = static_cast<int>(this->GetPieceX());
 	int y = static_cast<int>(this->GetPieceY());
 
-	int arrayX[4] = {x + 1, x + 1, x - 1, x - 1};
-	int arrayY[4] = {y + 1, y - 1, y + 1, y - 1};
+	int arrayX[4] = { x + 1, x + 1, x - 1, x - 1 };
+	int arrayY[4] = { y + 1, y - 1, y + 1, y - 1 };
 
 	for (int i = 0; i < 4; i++)
 	{
@@ -64,6 +71,5 @@ void Bishop::RenderPossibleMoves(SDL_Renderer* Renderer)
 			}
 		}
 	}
-
-	this->RenderPossMovesBlock(Renderer);
+	return this->PossibleMovesVector();
 }

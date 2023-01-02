@@ -16,6 +16,13 @@ Pawn::~Pawn()
 
 void Pawn::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
+	this->CalculatePossibleMoves();
+	this->CalculateMovesIfInCheck();
+	this->RenderPossMovesBlock(Renderer);
+}
+
+std::vector<int> Pawn::CalculatePossibleMoves()
+{
 	Piece** const boardPosition = Chess::GetBoardPos();
 
 	int x = static_cast<int>(this->GetPieceX());
@@ -70,5 +77,5 @@ void Pawn::RenderPossibleMoves(SDL_Renderer* Renderer)
 			this->PossibleMovesVector().push_back((x - 1) + ((y - 1) * 8));
 		}
 	}
-	this->RenderPossMovesBlock(Renderer);
+	return this->PossibleMovesVector();
 }

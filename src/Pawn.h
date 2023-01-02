@@ -11,4 +11,5 @@ public:
 	~Pawn();
 
 	void RenderPossibleMoves(SDL_Renderer*);
+	std::vector<int> CalculatePossibleMoves();
 };

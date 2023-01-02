@@ -11,4 +11,5 @@ public:
 	~Rook();
 
 	void RenderPossibleMoves(SDL_Renderer*);
+	std::vector<int> CalculatePossibleMoves();
 };

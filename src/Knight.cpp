@@ -16,14 +16,20 @@ Knight::~Knight()
 
 void Knight::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
+	this->CalculatePossibleMoves();
+	this->CalculateMovesIfInCheck();
+	this->RenderPossMovesBlock(Renderer);
+}
 
+std::vector<int> Knight::CalculatePossibleMoves()
+{
 	Piece** const boardPosition = Chess::GetBoardPos();
 
 	int x = static_cast<int>(this->GetPieceX());
 	int y = static_cast<int>(this->GetPieceY());
 
-	int arrayX[8] = { x+2, x+2, x+1, x+1, x-1, x-1, x-2, x-2 };
-	int arrayY[8] = { y+1, y-1, y+2, y-2, y+2, y-2, y+1, y-1 };
+	int arrayX[8] = { x + 2, x + 2, x + 1, x + 1, x - 1, x - 1, x - 2, x - 2 };
+	int arrayY[8] = { y + 1, y - 1, y + 2, y - 2, y + 2, y - 2, y + 1, y - 1 };
 
 	for (int i = 0; i < 8; i++)
 	{
@@ -33,5 +39,5 @@ void Knight::RenderPossibleMoves(SDL_Renderer* Renderer)
 				this->PossibleMovesVector().push_back(arrayX[i] + arrayY[i] * 8);
 		}
 	}
-	this->RenderPossMovesBlock(Renderer);
+	return this->PossibleMovesVector();
 }

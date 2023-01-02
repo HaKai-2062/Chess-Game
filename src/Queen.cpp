@@ -16,6 +16,13 @@ Queen::~Queen()
 
 void Queen::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
+	this->CalculatePossibleMoves();
+	this->CalculateMovesIfInCheck();
+	this->RenderPossMovesBlock(Renderer);
+}
+
+std::vector<int> Queen::CalculatePossibleMoves()
+{
 	Piece** const boardPosition = Chess::GetBoardPos();
 
 	int x = static_cast<int>(this->GetPieceX());
@@ -72,6 +79,5 @@ void Queen::RenderPossibleMoves(SDL_Renderer* Renderer)
 				arrayY[i]--;
 		}
 	}
-
-	this->RenderPossMovesBlock(Renderer);
+	return this->PossibleMovesVector();
 }

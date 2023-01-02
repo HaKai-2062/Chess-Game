@@ -11,4 +11,5 @@ public:
 	~King();
 
 	void RenderPossibleMoves(SDL_Renderer*);
+	std::vector<int> CalculatePossibleMoves();
 };

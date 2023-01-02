@@ -112,6 +112,11 @@ void Piece::RenderThePiece(SDL_Renderer* Renderer, const PieceType& pieceType, c
 	SDL_RenderCopy(Renderer, m_pieceTexture, nullptr, &pieceRect);
 }
 
+bool Piece::isBlackInCheck = false;
+bool Piece::isWhiteInCheck = false;
+int Piece::blackKingPos = 4;
+int Piece::whiteKingPos = 60;
+
 void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& currentTurn)
 {
 	if (currentTurn != this->GetPieceTeam())
@@ -160,6 +165,33 @@ void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& 
 
 	//change the turn
 	currentTurn = !currentTurn;
+
+	//save king position
+	if (this->GetPieceTeam() && this->GetPieceType() == KING)
+		Piece::whiteKingPos = static_cast<int>(this->GetPieceX()) + static_cast<int>(this->GetPieceY() * 8);
+	else if(!this->GetPieceTeam() && this->GetPieceType() == KING)
+		Piece::blackKingPos = static_cast<int>(this->GetPieceX()) + static_cast<int>(this->GetPieceY() * 8);
+
+	//calculate piece's next moves
+	std::cout << "White CHecked at:" << Piece::whiteKingPos << std::endl;
+	std::cout << "Black CHecked at:" << Piece::blackKingPos << std::endl;
+	this->CalculatePossibleMoves();
+	for (int i = 0; i < this->PossibleMovesVector().size(); i++)
+	{
+		//white piece
+		if (this->GetPieceTeam() && this->PossibleMovesVector()[i] == blackKingPos)
+		{
+			std::cout << "White CHecked at:" << Piece::whiteKingPos << std::endl;
+			Piece::isBlackInCheck = true;
+		}
+		//black piece
+		else if (!this->GetPieceTeam() && this->PossibleMovesVector()[i] == whiteKingPos)
+		{
+			std::cout << "Black CHecked at:" << Piece::blackKingPos << std::endl;
+			Piece::isWhiteInCheck = true;
+		}
+	}
+	this->PossibleMovesVector().clear();
 }
 
 void Piece::RenderPossMovesBlock(SDL_Renderer* Renderer)
@@ -176,5 +208,76 @@ void Piece::RenderPossMovesBlock(SDL_Renderer* Renderer)
 		else
 			SDL_SetRenderDrawColor(Renderer, 0, 255, 25, 96);
 		SDL_RenderFillRect(Renderer, &temp1);
+	}
+}
+
+void Piece::CalculateMovesIfInCheck()
+{
+	std::vector<int> firstEnemyPieceMoves;
+	std::vector<int> secondEnemyPieceMoves;
+	std::vector<int> friendlyPieceMoves;
+
+	if (Piece::isWhiteInCheck || Piece::isBlackInCheck)
+	{
+		Piece** const boardPosition = Chess::GetBoardPos();
+		
+		//first loop checks all enemy pieces
+		for (int i = 0; i < 64; i++)
+		{
+			//if enemy piece present
+			if ((Piece::isWhiteInCheck && boardPosition[i] && !boardPosition[i]->GetPieceTeam() && this->GetPieceTeam()) || (Piece::isBlackInCheck && boardPosition[i] && boardPosition[i]->GetPieceTeam() && !this->GetPieceTeam()))
+			{
+				//second loop checks attacks of enemy pieces against our king
+				firstEnemyPieceMoves.clear();
+				firstEnemyPieceMoves = boardPosition[i]->CalculatePossibleMoves();
+				for (int j = 0; j < firstEnemyPieceMoves.size(); j++)
+				{
+					if ((this->GetPieceTeam() && firstEnemyPieceMoves[j] == Piece::whiteKingPos) || (!this->GetPieceTeam() && firstEnemyPieceMoves[j] == Piece::blackKingPos))
+					{
+						//third loop will go through all of our piece's moves
+						friendlyPieceMoves.clear();
+						for (int k = 0; k < this->PossibleMovesVector().size(); k++)
+						{
+							int x = static_cast<int>(this->GetPieceX());
+							int y = static_cast<int>(this->GetPieceY());
+							//temporarily save the position of our piece
+							boardPosition[this->PossibleMovesVector()[k]] = boardPosition[x + (y * 8)];
+							boardPosition[x + (y * 8)] = nullptr;
+							//check if our king is still in check after making this move
+							secondEnemyPieceMoves.clear();
+							secondEnemyPieceMoves = boardPosition[i]->CalculatePossibleMoves();
+							bool isLegelMove = true;
+							//fourth loop will check through enemy piece's moves again and see if it can still check our king or not
+							for (int l = 0; l < secondEnemyPieceMoves.size(); l++)
+							{
+								if ((this->GetPieceTeam() && secondEnemyPieceMoves[l] == Piece::whiteKingPos) || (!this->GetPieceTeam() && secondEnemyPieceMoves[l] == Piece::blackKingPos))
+								{
+									std::cout << "im not work\n";
+									isLegelMove = false;
+								}
+							}
+							if (isLegelMove)
+							{
+								friendlyPieceMoves.push_back(k);
+								if (this->GetPieceTeam())
+									Piece::isWhiteInCheck = false;
+								else
+									Piece::isBlackInCheck = false;
+							}
+							//restore the temp position that we set
+							boardPosition[x + (y * 8)] = boardPosition[this->PossibleMovesVector()[k]];
+							boardPosition[this->PossibleMovesVector()[k]] = nullptr;
+
+						}
+					}
+				}
+			}
+		}
+
+		this->PossibleMovesVector().clear();
+		this->PossibleMovesVector() = friendlyPieceMoves;
+		firstEnemyPieceMoves.clear();
+		secondEnemyPieceMoves.clear();
+		friendlyPieceMoves.clear();
 	}
 }

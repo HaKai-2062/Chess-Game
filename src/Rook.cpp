@@ -16,6 +16,13 @@ Rook::~Rook()
 
 void Rook::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
+	this->CalculatePossibleMoves();
+	this->CalculateMovesIfInCheck();
+	this->RenderPossMovesBlock(Renderer);
+}
+
+std::vector<int> Rook::CalculatePossibleMoves()
+{
 	Piece** const boardPosition = Chess::GetBoardPos();
 
 	int x = static_cast<int>(this->GetPieceX());
@@ -23,7 +30,7 @@ void Rook::RenderPossibleMoves(SDL_Renderer* Renderer)
 
 	int arrayX[4] = { x + 1, x - 1, x, x };
 	int arrayY[4] = { y, y, y + 1, y - 1 };
-	
+
 	for (int i = 0; i < 4; i++)
 	{
 		while (arrayX[i] > -1 && arrayX[i] < 8 && arrayY[i] > -1 && arrayY[i] < 8)
@@ -52,5 +59,5 @@ void Rook::RenderPossibleMoves(SDL_Renderer* Renderer)
 				arrayY[i]--;
 		}
 	}
-	this->RenderPossMovesBlock(Renderer);
+	return this->PossibleMovesVector();
 }
