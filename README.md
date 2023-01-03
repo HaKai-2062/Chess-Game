@@ -15,7 +15,7 @@ This repository contains a beta version of a chess game but at the moment it lac
 
 You can add the bin2c.exe and C_File_Generator.bat inside the Resource_Files Folder and generate the C files yourself using the batfile if you like.
 
-# Buidling the Game
+# Building the Game
 ## Windows
 - Make sure you have [Git](https://git-scm.com/downloads) installed on your system.
 - Go to the directory where you want to store all the raw files and build it.
@@ -25,7 +25,7 @@ You can add the bin2c.exe and C_File_Generator.bat inside the Resource_Files Fol
     git clone https://github.com/HaKaiiii/Chess-The-Game.git
 ```
 - After that open **Chess The Game.sln** in Visual Studio to build the project from solution.
-- All the required libraries are already present (statically linked) and all the assets were taken from [PNGEGG](https://www.pngegg.com)(100x100 size).
+- All the required libraries are already present (statically linked) and all the assets are taken from [PNGEGG](https://www.pngegg.com)(100x100 size).
 
 # Future Plans
 It currently lacks basic functionalities but after implementing basic functionalities, the plan is to add an AI and probably extend it to be multiplayer(p2p) with basic chat functionalities as well.

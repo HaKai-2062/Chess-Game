@@ -17,7 +17,7 @@ Bishop::~Bishop()
 void Bishop::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
 	this->CalculatePossibleMoves();
-	this->CalculateMovesIfInCheck();
+	this->CalculateMovesForCheck();
 	this->RenderPossMovesBlock(Renderer);
 }
 

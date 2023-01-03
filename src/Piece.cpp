@@ -165,7 +165,7 @@ void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& 
 	currentTurn = !currentTurn;
 
 	//if king then set its position and set the kingInCheck flag
-	Piece::SetCheckCondition();
+	Piece::SetKingVariables();
 }
 
 void Piece::RenderPossMovesBlock(SDL_Renderer* Renderer)
@@ -184,7 +184,9 @@ void Piece::RenderPossMovesBlock(SDL_Renderer* Renderer)
 	}
 }
 
-void Piece::CalculateMovesIfInCheck()
+//ATM i only run away from piece that is checking me
+
+void Piece::CalculateMovesForCheck()
 {
 	std::vector<int> firstEnemyPieceMoves;
 	std::vector<int> secondEnemyPieceMoves;
@@ -216,30 +218,43 @@ void Piece::CalculateMovesIfInCheck()
 							int x = static_cast<int>(this->GetPieceX());
 							int y = static_cast<int>(this->GetPieceY());
 							
-							//if a piece is present (prolly enemy piece)
+							//if enemy piece is present
 							if (boardPosition[this->PossibleMovesVector()[k]])
 								tempPiece = boardPosition[this->PossibleMovesVector()[k]];
 							
 							//temporarily save the position of our piece
 							boardPosition[this->PossibleMovesVector()[k]] = boardPosition[x + (y * 8)];
 							boardPosition[x + (y * 8)] = nullptr;
+							
 							//check if our king is still in check after making this move
 							boardPosition[i]->PossibleMovesVector().clear();
 							secondEnemyPieceMoves.clear();
 							secondEnemyPieceMoves = boardPosition[i]->CalculatePossibleMoves();
 							bool isLegelMove = true;
+							
 							//fourth loop will check through enemy piece's moves again and see if it can still check our king or not
 							for (int l = 0; l < secondEnemyPieceMoves.size(); l++)
 							{
-								if ((this->GetPieceTeam() && secondEnemyPieceMoves[l] == Piece::whiteKingPos) || (!this->GetPieceTeam() && secondEnemyPieceMoves[l] == Piece::blackKingPos))
+								//TDL: need another loop to check for multiple enemies?
+
+								//if it can still check
+								if (this->GetPieceType() != KING && ((this->GetPieceTeam() && secondEnemyPieceMoves[l] == Piece::whiteKingPos) || (!this->GetPieceTeam() && secondEnemyPieceMoves[l] == Piece::blackKingPos)))
 								{
 									isLegelMove = false;
+									break;
+								}
+
+								//if we are king and our position is not in enemies' poss moves
+								else if (this->GetPieceType() == KING && secondEnemyPieceMoves[l] == this->PossibleMovesVector()[k])
+								{
+									isLegelMove = false;
+									break;
 								}
 							}
+
 							if (isLegelMove)
-							{
 								friendlyPieceMoves.push_back(this->PossibleMovesVector()[k]);
-							}
+
 							//restore the temp position that we set
 							boardPosition[x + (y * 8)] = boardPosition[this->PossibleMovesVector()[k]];
 							if (tempPiece)
@@ -247,14 +262,13 @@ void Piece::CalculateMovesIfInCheck()
 							else
 								boardPosition[this->PossibleMovesVector()[k]] = nullptr;
 							tempPiece = nullptr;
-
-
 						}
+						//no need to search for further enemy attacks
+						break;
 					}
 				}
 			}
 		}
-
 		this->PossibleMovesVector().clear();
 		this->PossibleMovesVector() = friendlyPieceMoves;
 		firstEnemyPieceMoves.clear();
@@ -263,66 +277,72 @@ void Piece::CalculateMovesIfInCheck()
 	}
 
 	//can my move put my king under check?
-	friendlyPieceMoves.clear();
-	for (int i = 0; i < this->PossibleMovesVector().size(); i++)
+	else
 	{
-		int x = static_cast<int>(this->GetPieceX());
-		int y = static_cast<int>(this->GetPieceY());
-
-		//if a piece is present (prolly enemy piece)
-		if (boardPosition[this->PossibleMovesVector()[i]])
-			tempPiece = boardPosition[this->PossibleMovesVector()[i]];
-
-		//temporarily save the position of our piece
-		boardPosition[this->PossibleMovesVector()[i]] = boardPosition[x + (y * 8)];
-		boardPosition[x + (y * 8)] = nullptr;
-
-		bool isLegalMove = true;
-		//loop through enemy pieces and see if they can take our piece
-		for (int j = 0; j < 64; j++)
+		friendlyPieceMoves.clear();
+		for (int i = 0; i < this->PossibleMovesVector().size(); i++)
 		{
-			if (boardPosition[j] && boardPosition[j]->GetPieceTeam() != this->GetPieceTeam())
+			int x = static_cast<int>(this->GetPieceX());
+			int y = static_cast<int>(this->GetPieceY());
+
+			//if enemy piece is present
+			if (boardPosition[this->PossibleMovesVector()[i]])
+				tempPiece = boardPosition[this->PossibleMovesVector()[i]];
+
+			//temporarily save the position of our piece
+			boardPosition[this->PossibleMovesVector()[i]] = boardPosition[x + (y * 8)];
+			boardPosition[x + (y * 8)] = nullptr;
+			bool isLegalMove = true;
+
+			//loop through enemy pieces and see if they can take our piece
+			for (int j = 0; j < 64; j++)
 			{
-				//TDL:clearing this can create bugs maybe when being cornered by multiple pieces?
-				boardPosition[j]->PossibleMovesVector().clear();
-				boardPosition[j]->CalculatePossibleMoves();
-				//chheck if enemy has our king under check
-				for (int k = 0; k < boardPosition[j]->PossibleMovesVector().size(); k++)
+				if (boardPosition[j] && boardPosition[j]->GetPieceTeam() != this->GetPieceTeam())
 				{
-					if ((this->GetPieceTeam() && boardPosition[j]->PossibleMovesVector()[k] == Piece::whiteKingPos) || (!this->GetPieceTeam() && boardPosition[j]->PossibleMovesVector()[k] == Piece::blackKingPos))
+					//TDL:clearing this can create bugs maybe when being cornered by multiple pieces?
+					boardPosition[j]->PossibleMovesVector().clear();
+					boardPosition[j]->CalculatePossibleMoves();
+					//chheck if enemy has our king under check
+					for (int k = 0; k < boardPosition[j]->PossibleMovesVector().size(); k++)
 					{
-						isLegalMove = false;
+						if (this->GetPieceType() != KING && ((this->GetPieceTeam() && boardPosition[j]->PossibleMovesVector()[k] == Piece::whiteKingPos) || (!this->GetPieceTeam() && boardPosition[j]->PossibleMovesVector()[k] == Piece::blackKingPos))) 
+						{
+							isLegalMove = false;
+							break;
+						}
+						//if we are king and our position is not in enemies' poss moves
+						else if (this->GetPieceType() == KING && boardPosition[j]->PossibleMovesVector()[k] == this->PossibleMovesVector()[i])
+						{
+							isLegalMove = false;
+							break;
+						}
 					}
+					//delete moves calculated earlier
+					boardPosition[j]->PossibleMovesVector().clear();
 				}
-				//delete moves calculated earlier
-				boardPosition[j]->PossibleMovesVector().clear();
 			}
-		}
 
-		//so our choice led to our king under check?
-		if (isLegalMove)
-		{
-			friendlyPieceMoves.push_back(this->PossibleMovesVector()[i]);
+			//so our choice led to our king under check?
+			if (isLegalMove)
+			{
+				friendlyPieceMoves.push_back(this->PossibleMovesVector()[i]);
+			}
+
+			//restored the temporary position stored
+			boardPosition[x + (y * 8)] = boardPosition[this->PossibleMovesVector()[i]];
+			if (tempPiece)
+				boardPosition[this->PossibleMovesVector()[i]] = tempPiece;
+			else
+				boardPosition[this->PossibleMovesVector()[i]] = nullptr;
+			tempPiece = nullptr;
 		}
-		
-		//restored the temporary position stored
-		boardPosition[x + (y * 8)] = boardPosition[this->PossibleMovesVector()[i]];
-		if (tempPiece)
-			boardPosition[this->PossibleMovesVector()[i]] = tempPiece;
-		else
-			boardPosition[this->PossibleMovesVector()[i]] = nullptr;
-		tempPiece = nullptr;
+		this->PossibleMovesVector().clear();
+		this->PossibleMovesVector() = friendlyPieceMoves;
+		friendlyPieceMoves.clear();
 	}
-	this->PossibleMovesVector().clear();
-	for (int i = 0; i < friendlyPieceMoves.size(); i++)
-	{
-		std::cout << friendlyPieceMoves[i] << std::endl;
-	}
-	this->PossibleMovesVector() = friendlyPieceMoves;
-	friendlyPieceMoves.clear();
 }
 
-void Piece::SetCheckCondition()
+void Piece::SetKingVariables()
 {
 	//if "this" is king then save position
 	if (this->GetPieceTeam() && this->GetPieceType() == KING)

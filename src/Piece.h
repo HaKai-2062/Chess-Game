@@ -23,12 +23,12 @@ public:
 	void RenderThePiece(SDL_Renderer*, const PieceType&, const bool&, const float&, const float&);
 	void RenderPossMovesBlock(SDL_Renderer*);
 	void MoveThePiece(SDL_Renderer*, int, bool&);
-	void SetCheckCondition();
+	void SetKingVariables();
 
 	//every derived class must have these functions
 	virtual void RenderPossibleMoves(SDL_Renderer*) = 0;
 	virtual std::vector<int> CalculatePossibleMoves() = 0;
-	void CalculateMovesIfInCheck();
+	void CalculateMovesForCheck();
 	//virtual void calculatePossibleMoves(SDL_Renderer*, const bool&, const int&, const int&) = 0;
 	//virtual bool isValidMove() = 0;
 	//virtual void moveThePiece(int, int) = 0;
