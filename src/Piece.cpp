@@ -254,6 +254,24 @@ void Piece::CalculateMovesForCheck()
 									break;
 								}
 								//TDL: fifth loop to check for other enemies that might be attacking my king
+								for (int m = 0; m < 64; m++)
+								{
+									if (i != m && boardPosition[m] && ((Piece::isWhiteInCheck && boardPosition[m] && !boardPosition[m]->GetPieceTeam() && this->GetPieceTeam()) || (Piece::isBlackInCheck && boardPosition[m] && boardPosition[m]->GetPieceTeam() && !this->GetPieceTeam())))
+									{
+										thirdEnemyPieceMoves.clear();
+										boardPosition[m]->PossibleMovesVector().clear();
+										thirdEnemyPieceMoves = boardPosition[m]->CalculatePossibleMoves();
+										for (int n = 0; n < thirdEnemyPieceMoves.size(); n++)
+										{
+											if ((this->GetPieceTeam() && thirdEnemyPieceMoves[n] == Piece::whiteKingPos) || (!this->GetPieceTeam() && thirdEnemyPieceMoves[n] == Piece::blackKingPos))
+											{
+												isLegelMove = false;
+												m = 64;
+												break;
+											}
+										}
+									}
+								}
 							}
 
 							if (isLegelMove)
