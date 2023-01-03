@@ -16,7 +16,6 @@ Knight::~Knight()
 
 void Knight::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
-	this->CalculatePossibleMoves();
 	this->CalculateMovesForCheck();
 	this->RenderPossMovesBlock(Renderer);
 }

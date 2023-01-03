@@ -190,8 +190,8 @@ void Piece::CalculateMovesForCheck()
 {
 	std::vector<int> firstEnemyPieceMoves;
 	std::vector<int> secondEnemyPieceMoves;
+	std::vector<int> thirdEnemyPieceMoves;
 	std::vector<int> friendlyPieceMoves;
-	
 	Piece* tempPiece = nullptr;
 
 	//sacrifice the piece to save our king
@@ -213,19 +213,24 @@ void Piece::CalculateMovesForCheck()
 					{
 						friendlyPieceMoves.clear();
 						//third loop will go through all of our piece's moves
+						this->PossibleMovesVector().clear();
+						this->CalculatePossibleMoves();
 						for (int k = 0; k < this->PossibleMovesVector().size(); k++)
 						{
 							int x = static_cast<int>(this->GetPieceX());
 							int y = static_cast<int>(this->GetPieceY());
-							
+
 							//if enemy piece is present
+							//TDL: calculate moves when i take enemy pawn and need to make some workaround here
 							if (boardPosition[this->PossibleMovesVector()[k]])
-								tempPiece = boardPosition[this->PossibleMovesVector()[k]];
-							
+							{
+								continue;
+							}
+
 							//temporarily save the position of our piece
 							boardPosition[this->PossibleMovesVector()[k]] = boardPosition[x + (y * 8)];
 							boardPosition[x + (y * 8)] = nullptr;
-							
+
 							//check if our king is still in check after making this move
 							boardPosition[i]->PossibleMovesVector().clear();
 							secondEnemyPieceMoves.clear();
@@ -235,8 +240,6 @@ void Piece::CalculateMovesForCheck()
 							//fourth loop will check through enemy piece's moves again and see if it can still check our king or not
 							for (int l = 0; l < secondEnemyPieceMoves.size(); l++)
 							{
-								//TDL: need another loop to check for multiple enemies?
-
 								//if it can still check
 								if (this->GetPieceType() != KING && ((this->GetPieceTeam() && secondEnemyPieceMoves[l] == Piece::whiteKingPos) || (!this->GetPieceTeam() && secondEnemyPieceMoves[l] == Piece::blackKingPos)))
 								{
@@ -250,6 +253,7 @@ void Piece::CalculateMovesForCheck()
 									isLegelMove = false;
 									break;
 								}
+								//TDL: fifth loop to check for other enemies that might be attacking my king
 							}
 
 							if (isLegelMove)
@@ -257,11 +261,7 @@ void Piece::CalculateMovesForCheck()
 
 							//restore the temp position that we set
 							boardPosition[x + (y * 8)] = boardPosition[this->PossibleMovesVector()[k]];
-							if (tempPiece)
-								boardPosition[this->PossibleMovesVector()[k]] = tempPiece;
-							else
-								boardPosition[this->PossibleMovesVector()[k]] = nullptr;
-							tempPiece = nullptr;
+							boardPosition[this->PossibleMovesVector()[k]] = nullptr;
 						}
 						//no need to search for further enemy attacks
 						break;
@@ -280,6 +280,8 @@ void Piece::CalculateMovesForCheck()
 	else
 	{
 		friendlyPieceMoves.clear();
+		this->PossibleMovesVector().clear();
+		this->CalculatePossibleMoves();
 		for (int i = 0; i < this->PossibleMovesVector().size(); i++)
 		{
 			int x = static_cast<int>(this->GetPieceX());

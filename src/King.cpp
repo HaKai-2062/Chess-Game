@@ -16,7 +16,6 @@ King::~King()
 
 void King::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
-	this->CalculatePossibleMoves();
 	this->CalculateMovesForCheck();
 	this->RenderPossMovesBlock(Renderer);
 }
