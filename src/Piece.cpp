@@ -190,6 +190,7 @@ void Piece::CalculateMovesIfInCheck()
 	std::vector<int> secondEnemyPieceMoves;
 	std::vector<int> friendlyPieceMoves;
 
+	//sacrifice the piece to save our king
 	if (Piece::isWhiteInCheck || Piece::isBlackInCheck)
 	{
 		//first loop checks all enemy pieces
@@ -248,7 +249,58 @@ void Piece::CalculateMovesIfInCheck()
 		secondEnemyPieceMoves.clear();
 		friendlyPieceMoves.clear();
 	}
+
+	//can my move put my king under check?
+	friendlyPieceMoves.clear();
+	for (int i = 0; i < this->PossibleMovesVector().size(); i++)
+	{
+		int x = static_cast<int>(this->GetPieceX());
+		int y = static_cast<int>(this->GetPieceY());
+		//temporarily save the position of our piece
+		boardPosition[this->PossibleMovesVector()[i]] = boardPosition[x + (y * 8)];
+		boardPosition[x + (y * 8)] = nullptr;
+
+		bool isLegalMove = true;
+		//loop through enemy pieces and see if they can take our piece
+		for (int j = 0; j < 64; j++)
+		{
+			if (boardPosition[j] && boardPosition[j]->GetPieceTeam() != this->GetPieceTeam())
+			{
+				//TDL:clearing this can create bugs maybe when being cornered by multiple pieces?
+				boardPosition[j]->PossibleMovesVector().clear();
+				boardPosition[j]->CalculatePossibleMoves();
+				//chheck if enemy has our king under check
+				for (int k = 0; k < boardPosition[j]->PossibleMovesVector().size(); k++)
+				{
+					if ((this->GetPieceTeam() && boardPosition[j]->PossibleMovesVector()[k] == Piece::whiteKingPos) || (!this->GetPieceTeam() && boardPosition[j]->PossibleMovesVector()[k] == Piece::blackKingPos))
+					{
+						isLegalMove = false;
+					}
+				}
+				//delete moves calculated earlier
+				boardPosition[j]->PossibleMovesVector().clear();
+			}
+		}
+
+		//so our choice led to our king under check?
+		if (isLegalMove)
+		{
+			friendlyPieceMoves.push_back(this->PossibleMovesVector()[i]);
+		}
+		
+		//restored the temporary position stored
+		boardPosition[x + (y * 8)] = boardPosition[this->PossibleMovesVector()[i]];
+		boardPosition[this->PossibleMovesVector()[i]] = nullptr;
+	}
+	this->PossibleMovesVector().clear();
+	for (int i = 0; i < friendlyPieceMoves.size(); i++)
+	{
+		std::cout << friendlyPieceMoves[i] << std::endl;
+	}
+	this->PossibleMovesVector() = friendlyPieceMoves;
+	friendlyPieceMoves.clear();
 }
+
 void Piece::SetCheckCondition()
 {
 	//if "this" is king then save position
