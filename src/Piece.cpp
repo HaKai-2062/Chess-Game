@@ -189,6 +189,8 @@ void Piece::CalculateMovesIfInCheck()
 	std::vector<int> firstEnemyPieceMoves;
 	std::vector<int> secondEnemyPieceMoves;
 	std::vector<int> friendlyPieceMoves;
+	
+	Piece* tempPiece = nullptr;
 
 	//sacrifice the piece to save our king
 	if (Piece::isWhiteInCheck || Piece::isBlackInCheck)
@@ -213,6 +215,11 @@ void Piece::CalculateMovesIfInCheck()
 						{
 							int x = static_cast<int>(this->GetPieceX());
 							int y = static_cast<int>(this->GetPieceY());
+							
+							//if a piece is present (prolly enemy piece)
+							if (boardPosition[this->PossibleMovesVector()[k]])
+								tempPiece = boardPosition[this->PossibleMovesVector()[k]];
+							
 							//temporarily save the position of our piece
 							boardPosition[this->PossibleMovesVector()[k]] = boardPosition[x + (y * 8)];
 							boardPosition[x + (y * 8)] = nullptr;
@@ -235,7 +242,12 @@ void Piece::CalculateMovesIfInCheck()
 							}
 							//restore the temp position that we set
 							boardPosition[x + (y * 8)] = boardPosition[this->PossibleMovesVector()[k]];
-							boardPosition[this->PossibleMovesVector()[k]] = nullptr;
+							if (tempPiece)
+								boardPosition[this->PossibleMovesVector()[k]] = tempPiece;
+							else
+								boardPosition[this->PossibleMovesVector()[k]] = nullptr;
+							tempPiece = nullptr;
+
 
 						}
 					}
@@ -256,6 +268,11 @@ void Piece::CalculateMovesIfInCheck()
 	{
 		int x = static_cast<int>(this->GetPieceX());
 		int y = static_cast<int>(this->GetPieceY());
+
+		//if a piece is present (prolly enemy piece)
+		if (boardPosition[this->PossibleMovesVector()[i]])
+			tempPiece = boardPosition[this->PossibleMovesVector()[i]];
+
 		//temporarily save the position of our piece
 		boardPosition[this->PossibleMovesVector()[i]] = boardPosition[x + (y * 8)];
 		boardPosition[x + (y * 8)] = nullptr;
@@ -290,7 +307,11 @@ void Piece::CalculateMovesIfInCheck()
 		
 		//restored the temporary position stored
 		boardPosition[x + (y * 8)] = boardPosition[this->PossibleMovesVector()[i]];
-		boardPosition[this->PossibleMovesVector()[i]] = nullptr;
+		if (tempPiece)
+			boardPosition[this->PossibleMovesVector()[i]] = tempPiece;
+		else
+			boardPosition[this->PossibleMovesVector()[i]] = nullptr;
+		tempPiece = nullptr;
 	}
 	this->PossibleMovesVector().clear();
 	for (int i = 0; i < friendlyPieceMoves.size(); i++)

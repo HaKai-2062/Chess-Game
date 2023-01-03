@@ -70,13 +70,7 @@ void Chess::MainRenderer()
 				break;
 			else if (gameEvent.type == SDL_KEYUP && gameEvent.key.keysym.sym == SDLK_d)
 			{
-				if (boardPosition[2 + 8 * 1])
-					std::cout << "sad loif" << std::endl;
-				else if (boardPosition[2 + 8 * 2])
-					std::cout << "good loif" << std::endl;
-				else if (boardPosition[2 + 8 * 3])
-					std::cout << "bad loif" << std::endl;
-				//std::cout << boardPosition[2+8*3]->GetPieceType()<<std::endl;
+				//to debug anything
 			}
 			
 			if (initialRun)
