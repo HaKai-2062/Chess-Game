@@ -24,8 +24,8 @@
 void MouseButtonPressed(SDL_Renderer*, bool& hasRenderedPossMove, const SDL_Event&, bool&);
 void FreeAllHeapMemory();
 
-//must declare it here because cant really return it
-Piece** boardPosition = new Piece * [64];
+Piece** boardPosition = new Piece* [64];
+
 //must declare here or else it doesnt remember ehhhh
 Piece* pieceClicked = nullptr;
 
@@ -68,6 +68,16 @@ void Chess::MainRenderer()
 				break;
 			else if (gameEvent.type == SDL_KEYUP && gameEvent.key.keysym.sym == SDLK_ESCAPE)
 				break;
+			else if (gameEvent.type == SDL_KEYUP && gameEvent.key.keysym.sym == SDLK_d)
+			{
+				if (boardPosition[2 + 8 * 1])
+					std::cout << "sad loif" << std::endl;
+				else if (boardPosition[2 + 8 * 2])
+					std::cout << "good loif" << std::endl;
+				else if (boardPosition[2 + 8 * 3])
+					std::cout << "bad loif" << std::endl;
+				//std::cout << boardPosition[2+8*3]->GetPieceType()<<std::endl;
+			}
 			
 			if (initialRun)
 			{
@@ -203,11 +213,6 @@ void Chess::Init(SDL_Renderer* Renderer)
 	boardPosition[4 + (0*8)] = king1;
 
 	boardPosition[4 + (7*8)] = king2;
-}
-
-Piece** Chess::GetBoardPos()
-{
-	return boardPosition;
 }
 
 // Linearly interpolates between two values a and b by the interpolant t.

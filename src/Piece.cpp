@@ -29,6 +29,11 @@ Piece::~Piece()
 	this->PossibleMovesVector().clear();
 }
 
+bool Piece::isBlackInCheck = false;
+bool Piece::isWhiteInCheck = false;
+int Piece::blackKingPos = 4;
+int Piece::whiteKingPos = 60;
+
 void Piece::RenderThePiece(SDL_Renderer* Renderer, const PieceType& pieceType, const bool& pieceTeam, const float& xPos, const float& yPos)
 {
 	//Rendering Piece
@@ -112,18 +117,11 @@ void Piece::RenderThePiece(SDL_Renderer* Renderer, const PieceType& pieceType, c
 	SDL_RenderCopy(Renderer, m_pieceTexture, nullptr, &pieceRect);
 }
 
-bool Piece::isBlackInCheck = false;
-bool Piece::isWhiteInCheck = false;
-int Piece::blackKingPos = 4;
-int Piece::whiteKingPos = 60;
-
 void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& currentTurn)
 {
 	if (currentTurn != this->GetPieceTeam())
 		return;
 
-	Piece** const boardPosition = Chess::GetBoardPos();
-	
 	this->m_hasMoved = true;
 
 	int xStart = static_cast<int>(this->GetPieceX());
@@ -166,37 +164,12 @@ void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& 
 	//change the turn
 	currentTurn = !currentTurn;
 
-	//save king position
-	if (this->GetPieceTeam() && this->GetPieceType() == KING)
-		Piece::whiteKingPos = static_cast<int>(this->GetPieceX()) + static_cast<int>(this->GetPieceY() * 8);
-	else if(!this->GetPieceTeam() && this->GetPieceType() == KING)
-		Piece::blackKingPos = static_cast<int>(this->GetPieceX()) + static_cast<int>(this->GetPieceY() * 8);
-
-	//calculate piece's next moves
-	std::cout << "White CHecked at:" << Piece::whiteKingPos << std::endl;
-	std::cout << "Black CHecked at:" << Piece::blackKingPos << std::endl;
-	this->CalculatePossibleMoves();
-	for (int i = 0; i < this->PossibleMovesVector().size(); i++)
-	{
-		//white piece
-		if (this->GetPieceTeam() && this->PossibleMovesVector()[i] == blackKingPos)
-		{
-			std::cout << "White CHecked at:" << Piece::whiteKingPos << std::endl;
-			Piece::isBlackInCheck = true;
-		}
-		//black piece
-		else if (!this->GetPieceTeam() && this->PossibleMovesVector()[i] == whiteKingPos)
-		{
-			std::cout << "Black CHecked at:" << Piece::blackKingPos << std::endl;
-			Piece::isWhiteInCheck = true;
-		}
-	}
-	this->PossibleMovesVector().clear();
+	//if king then set its position and set the kingInCheck flag
+	Piece::SetCheckCondition();
 }
 
 void Piece::RenderPossMovesBlock(SDL_Renderer* Renderer)
 {
-	Piece** const boardPosition = Chess::GetBoardPos();
 	//Render the possible Moves Box here
 	for (int i = 0; i < this->PossibleMovesVector().size(); i++)
 	{
@@ -219,8 +192,6 @@ void Piece::CalculateMovesIfInCheck()
 
 	if (Piece::isWhiteInCheck || Piece::isBlackInCheck)
 	{
-		Piece** const boardPosition = Chess::GetBoardPos();
-		
 		//first loop checks all enemy pieces
 		for (int i = 0; i < 64; i++)
 		{
@@ -229,13 +200,14 @@ void Piece::CalculateMovesIfInCheck()
 			{
 				//second loop checks attacks of enemy pieces against our king
 				firstEnemyPieceMoves.clear();
+				boardPosition[i]->PossibleMovesVector().clear();
 				firstEnemyPieceMoves = boardPosition[i]->CalculatePossibleMoves();
 				for (int j = 0; j < firstEnemyPieceMoves.size(); j++)
 				{
 					if ((this->GetPieceTeam() && firstEnemyPieceMoves[j] == Piece::whiteKingPos) || (!this->GetPieceTeam() && firstEnemyPieceMoves[j] == Piece::blackKingPos))
 					{
-						//third loop will go through all of our piece's moves
 						friendlyPieceMoves.clear();
+						//third loop will go through all of our piece's moves
 						for (int k = 0; k < this->PossibleMovesVector().size(); k++)
 						{
 							int x = static_cast<int>(this->GetPieceX());
@@ -244,6 +216,7 @@ void Piece::CalculateMovesIfInCheck()
 							boardPosition[this->PossibleMovesVector()[k]] = boardPosition[x + (y * 8)];
 							boardPosition[x + (y * 8)] = nullptr;
 							//check if our king is still in check after making this move
+							boardPosition[i]->PossibleMovesVector().clear();
 							secondEnemyPieceMoves.clear();
 							secondEnemyPieceMoves = boardPosition[i]->CalculatePossibleMoves();
 							bool isLegelMove = true;
@@ -252,17 +225,12 @@ void Piece::CalculateMovesIfInCheck()
 							{
 								if ((this->GetPieceTeam() && secondEnemyPieceMoves[l] == Piece::whiteKingPos) || (!this->GetPieceTeam() && secondEnemyPieceMoves[l] == Piece::blackKingPos))
 								{
-									std::cout << "im not work\n";
 									isLegelMove = false;
 								}
 							}
 							if (isLegelMove)
 							{
-								friendlyPieceMoves.push_back(k);
-								if (this->GetPieceTeam())
-									Piece::isWhiteInCheck = false;
-								else
-									Piece::isBlackInCheck = false;
+								friendlyPieceMoves.push_back(this->PossibleMovesVector()[k]);
 							}
 							//restore the temp position that we set
 							boardPosition[x + (y * 8)] = boardPosition[this->PossibleMovesVector()[k]];
@@ -280,4 +248,38 @@ void Piece::CalculateMovesIfInCheck()
 		secondEnemyPieceMoves.clear();
 		friendlyPieceMoves.clear();
 	}
+}
+void Piece::SetCheckCondition()
+{
+	//if "this" is king then save position
+	if (this->GetPieceTeam() && this->GetPieceType() == KING)
+		Piece::whiteKingPos = static_cast<int>(this->GetPieceX()) + static_cast<int>(this->GetPieceY() * 8);
+	else if (!this->GetPieceTeam() && this->GetPieceType() == KING)
+		Piece::blackKingPos = static_cast<int>(this->GetPieceX()) + static_cast<int>(this->GetPieceY() * 8);
+
+	//save the vars as false after a move has been performed
+	if (this->GetPieceTeam())
+		Piece::isWhiteInCheck = false;
+	else
+		Piece::isBlackInCheck = false;
+
+	//set check here by calculating enemy piece's next moves
+	this->PossibleMovesVector().clear();
+	this->CalculatePossibleMoves();
+	for (int i = 0; i < this->PossibleMovesVector().size(); i++)
+	{
+		//white piece
+		if (this->GetPieceTeam() && this->PossibleMovesVector()[i] == blackKingPos)
+		{
+			std::cout << "Black King Checked at: " << Piece::blackKingPos << std::endl;
+			Piece::isBlackInCheck = true;
+		}
+		//black piece
+		else if (!this->GetPieceTeam() && this->PossibleMovesVector()[i] == whiteKingPos)
+		{
+			std::cout << "White King Checked at: " << Piece::whiteKingPos << std::endl;
+			Piece::isWhiteInCheck = true;
+		}
+	}
+	this->PossibleMovesVector().clear();
 }

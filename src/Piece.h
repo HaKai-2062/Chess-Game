@@ -15,8 +15,6 @@ public:
 	void AddToX(const float& x) { this->m_XPos = this->m_XPos + x; }
 	void AddToY(const float& y) { this->m_YPos = this->m_YPos + y; }
 
-	void GetMyKingPosition();
-
 	SDL_Texture* GetPieceTexture() { return this->m_pieceTexture; }
 	SDL_RWops* GetPieceRW() { return this->m_pieceRW; }
 	SDL_Surface* GetPieceSurface() { return this->m_pieceSurface; }
@@ -25,6 +23,7 @@ public:
 	void RenderThePiece(SDL_Renderer*, const PieceType&, const bool&, const float&, const float&);
 	void RenderPossMovesBlock(SDL_Renderer*);
 	void MoveThePiece(SDL_Renderer*, int, bool&);
+	void SetCheckCondition();
 
 	//every derived class must have these functions
 	virtual void RenderPossibleMoves(SDL_Renderer*) = 0;

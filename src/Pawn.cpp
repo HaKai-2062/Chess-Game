@@ -23,8 +23,6 @@ void Pawn::RenderPossibleMoves(SDL_Renderer* Renderer)
 
 std::vector<int> Pawn::CalculatePossibleMoves()
 {
-	Piece** const boardPosition = Chess::GetBoardPos();
-
 	int x = static_cast<int>(this->GetPieceX());
 	int y = static_cast<int>(this->GetPieceY());
 

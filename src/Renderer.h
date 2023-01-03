@@ -20,7 +20,6 @@ namespace Chess
 	void MainRenderer();
 	void Init(SDL_Renderer*);
 	void MissingTexture(bool, std::string);
-	Piece** GetBoardPos();
 	void RenderAllPiece(SDL_Renderer*);
 	void DrawChessBoard(SDL_Renderer*);
 	void DestroyAllPieceTextures();
@@ -32,3 +31,5 @@ namespace Chess
 
 static const int WIDTH = 800;
 static const int HEIGHT = 800;
+
+extern Piece** boardPosition;
