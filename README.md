@@ -1,6 +1,6 @@
 # Chess The Game
 
-![Chess The Game](Resource%20Files/chess.png)
+![Chess The Game](Resource_Files/chess.png)
 
 # Introduction
 
@@ -11,9 +11,9 @@ This repository contains a beta version of a chess game but at the moment it lac
 [Visual Studio](https://visualstudio.microsoft.com/vs/) is an integrated development environment (IDE) and was used to build the project into exe to run on windows.
 
 ## bin2c
-[bin2c](https://sourceforge.net/projects/bin2c/) was used to convert all the assets present inside the Resources Files folder into a C format so that they can be included inside the project without having the need of finding them at runtime.
+[bin2c](https://sourceforge.net/projects/bin2c/) was used to convert all the assets present inside the Resource_Files folder into a C format so that they can be included inside the project without having the need of finding them at runtime.
 
-You can add the bin2c.exe and C_File_Generator.bat inside the Resource Folder and generate the C files yourself using the batfile if you like.
+You can add the bin2c.exe and C_File_Generator.bat inside the Resource_Files Folder and generate the C files yourself using the batfile if you like.
 
 # Buidling the Game
 ## Windows
