@@ -34,6 +34,9 @@ bool Piece::isWhiteInCheck = false;
 int Piece::blackKingPos = 4;
 int Piece::whiteKingPos = 60;
 
+int Piece::enPassant = 99;
+int Piece::enPassantColor = 99;
+
 void Piece::RenderThePiece(SDL_Renderer* Renderer, const PieceType& pieceType, const bool& pieceTeam, const float& xPos, const float& yPos)
 {
 	//Rendering Piece
@@ -122,8 +125,6 @@ void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& 
 	if (currentTurn != this->GetPieceTeam())
 		return;
 
-	this->m_hasMoved = true;
-
 	int xStart = static_cast<int>(this->GetPieceX());
 	int yStart = static_cast<int>(this->GetPieceY());
 
@@ -166,6 +167,11 @@ void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& 
 
 	//if king then set its position and set the kingInCheck flag
 	Piece::SetKingVariables();
+
+	//Set EnPassant here
+	Piece::SetEnPassant(xStart, yStart, xEnd, yEnd);
+
+	this->m_hasMoved = true;
 }
 
 void Piece::RenderPossMovesBlock(SDL_Renderer* Renderer)
@@ -176,10 +182,19 @@ void Piece::RenderPossMovesBlock(SDL_Renderer* Renderer)
 		SDL_Rect temp1{ Chess::GetBlockX(this->PossibleMovesVector()[i]) * (WIDTH / 8), Chess::GetBlockY(this->PossibleMovesVector()[i]) * (HEIGHT / 8),  WIDTH / 8 , HEIGHT / 8 };
 		//enemy piece found
 		if (boardPosition[this->PossibleMovesVector()[i]] && boardPosition[this->PossibleMovesVector()[i]]->GetPieceTeam() != this->GetPieceTeam())
+		{
 			SDL_SetRenderDrawColor(Renderer, 255, 20, 25, 96);
+		}
+		//coloring if we are caching the piece by enPassant
+		else if (Piece::enPassantColor != 99 && !boardPosition[this->PossibleMovesVector()[i]] && Piece::enPassantColor == this->PossibleMovesVector()[i])
+		{
+			SDL_SetRenderDrawColor(Renderer, 255, 20, 25, 96);
+		}
 		//empty piece found
 		else
+		{
 			SDL_SetRenderDrawColor(Renderer, 0, 255, 25, 96);
+		}
 		SDL_RenderFillRect(Renderer, &temp1);
 	}
 }
@@ -221,10 +236,73 @@ void Piece::SetKingVariables()
 	}
 }
 
+bool Piece::EndGameReached()
+{
+	/*
+	//Stalemate and Checkmates are set to true initially and moves are calculated later on
+	bool staleMate_W = true;
+	bool staleMate_B = true;
+	bool checkMate_W = false;
+	bool checkMate_B = false;
 
-//ATM i only run away from piece that is checking me
+	
+	
+	for (int i = 0; i < 64; i++)
+	{
+		if (boardPosition[i] && this->GetPieceTeam() == boardPosition[i]->GetPieceTeam())
+		{
+			boardPosition[i]->CalculateLegitMoves();
+			std::cout << boardPosition[i]->PossibleMovesVector().size() << std::endl;
+			//White Piece
+			if (this->GetPieceTeam())
+			{
+				if (Piece::isWhiteInCheck && boardPosition[i]->PossibleMovesVector().size() != 0)
+					checkMate_W = false;
 
-void Piece::CalculateMovesForCheck()
+				else if (boardPosition[i]->PossibleMovesVector().size() != 0)
+					staleMate_W = false;
+			}
+
+			//Black Piece
+			else if (!this->GetPieceTeam())
+			{
+				if (Piece::isBlackInCheck && boardPosition[i]->PossibleMovesVector().size() != 0)
+					checkMate_B = false;
+				
+				else if (boardPosition[i]->PossibleMovesVector().size() != 0)
+					staleMate_B = false;
+			}
+			boardPosition[i]->PossibleMovesVector().clear();
+		}
+
+	}
+	
+	if (checkMate_W)
+	{
+		std::cout << "Checkmated White ;)" << std::endl;
+		return true;
+	}
+
+	else if (checkMate_B)
+	{
+		std::cout << "Checkmated Black ;)" << std::endl;
+		return true;
+	}
+	else if (staleMate_W)
+	{
+		std::cout << "Stalemate reached by White King :o" << std::endl;
+		return true;
+	}
+	else if (staleMate_B)
+	{
+		std::cout << "Stalemate reached by Black King :o" << std::endl;
+		return true;
+	}
+	*/
+	return false;
+}
+
+void Piece::CalculateLegitMoves()
 {
 	this->PossibleMovesVector().clear();
 	std::vector<int> friendlyPieceMoves;
@@ -237,15 +315,6 @@ void Piece::CalculateMovesForCheck()
 		if (this->IsLegitMove(friendlyPieceMoves[i]))
 			this->PossibleMovesVector().push_back(friendlyPieceMoves[i]);
 	}
-
-	if (this->GetPieceType() == KING && this->GetPieceTeam() && this->PossibleMovesVector().size() == 0 && Piece::isWhiteInCheck)
-		std::cout << "Checkmated White ;)" << std::endl;
-	else if (this->GetPieceType() == KING && !this->GetPieceTeam() && this->PossibleMovesVector().size() == 0 && Piece::isBlackInCheck)
-		std::cout << "Checkmated Black ;)" << std::endl;
-	else if(this->GetPieceType() == KING && this->GetPieceTeam() && this->PossibleMovesVector().size() == 0 && !Piece::isWhiteInCheck)
-		std::cout << "Stalemate reached by White King :o" << std::endl;
-	else if (this->GetPieceType() == KING && !this->GetPieceTeam() && this->PossibleMovesVector().size() == 0 && !Piece::isBlackInCheck)
-		std::cout << "Stalemate reached by Black King :o" << std::endl;
 }
 
 bool Piece::IsLegitMove(const int& pieceMove)
@@ -302,4 +371,60 @@ bool Piece::IsLegitMove(const int& pieceMove)
 	tempPiece = nullptr;
 
 	return legalMove;
+}
+
+void Piece::SetEnPassant(const int& xStart, const int& yStart, const int& x, const int& y)
+{
+	//take out enemy by enPassant
+	if (this->GetPieceType() == PAWN && (Piece::enPassant == xStart + (yStart * 8) || Piece::enPassant == (xStart + (yStart * 8)) * 100))
+	{
+		//White Pawn took Black by enPassant
+		if (this->GetPieceTeam())
+		{
+			delete boardPosition[x + ((y + 1) * 8)];
+			boardPosition[x + ((y + 1) * 8)] = nullptr;
+		}
+
+		//Black Pawn took White by enPassant
+		else
+		{
+			delete boardPosition[x + ((y - 1) * 8)];
+			boardPosition[x + ((y - 1) * 8)] = nullptr;
+		}
+
+		//enPassant resetted
+		Piece::enPassant = 99;
+	}
+
+	//Set enPassant to false if some other piece has moved
+	else if (Piece::enPassant != 99 && Piece::enPassant != xStart + (yStart * 8) && Piece::enPassant != (xStart + (yStart * 8)) * 100)
+	{
+		Piece::enPassant = 99;
+		Piece::enPassantColor = 99;
+	}
+
+	//if "this" can be captured by enPassant then save it
+	else if (!this->HasPieceMoved() && this->GetPieceType() == PAWN && (this->GetPieceTeam() && y == 4 || !this->GetPieceTeam() && y == 3))
+	{
+		//piece on right of board
+		if (boardPosition[(x + 1) + (y * 8)] && boardPosition[(x + 1) + (y * 8)]->GetPieceTeam() != this->GetPieceTeam() && boardPosition[(x + 1) + (y * 8)]->GetPieceType() == PAWN)
+		{
+			Piece::enPassant = ((x + 1) + (y * 8));
+			
+			if (this->GetPieceTeam())
+				Piece::enPassantColor = x + (y + 1) * 8;
+			else
+				Piece::enPassantColor = x + (y - 1) * 8;
+		}
+		//piece on left of board
+		else if (boardPosition[(x - 1) + (y * 8)] && boardPosition[(x - 1) + (y * 8)]->GetPieceTeam() != this->GetPieceTeam() && boardPosition[(x - 1) + (y * 8)]->GetPieceType() == PAWN)
+		{
+			Piece::enPassant = ((x - 1) + (y * 8)) * 100;
+			
+			if (this->GetPieceTeam())
+				Piece::enPassantColor = x + (y + 1) * 8;
+			else
+				Piece::enPassantColor = x + (y - 1) * 8;
+		}
+	}
 }

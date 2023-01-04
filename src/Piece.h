@@ -24,12 +24,14 @@ public:
 	void RenderPossMovesBlock(SDL_Renderer*);
 	void MoveThePiece(SDL_Renderer*, int, bool&);
 	void SetKingVariables();
-	bool IsLegitMove(const int&);
+	void SetEnPassant(const int&, const int&, const int&, const int&);
+	bool EndGameReached();
 
 	//every derived class must have these functions
 	virtual void RenderPossibleMoves(SDL_Renderer*) = 0;
 	virtual std::vector<int> CalculatePossibleMoves() = 0;
-	void CalculateMovesForCheck();
+	void CalculateLegitMoves();
+	bool IsLegitMove(const int&);
 	//virtual void calculatePossibleMoves(SDL_Renderer*, const bool&, const int&, const int&) = 0;
 	//virtual bool isValidMove() = 0;
 	//virtual void moveThePiece(int, int) = 0;
@@ -45,6 +47,9 @@ protected:
 	static bool isWhiteInCheck;
 	static int blackKingPos;
 	static int whiteKingPos;
+	//enPassant is stored in a hacky way, 1-64 would be piece on right of board, 99 would be not in enPassant and (1-64) * 100 would be piece on left of board
+	static int enPassant;
+	static int enPassantColor;
 
 private:
 	SDL_Renderer* m_Renderer = nullptr;

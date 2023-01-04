@@ -16,8 +16,11 @@ Knight::~Knight()
 
 void Knight::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
-	this->CalculateMovesForCheck();
-	this->RenderPossMovesBlock(Renderer);
+	if (!Piece::EndGameReached())
+	{
+		this->CalculateLegitMoves();
+		this->RenderPossMovesBlock(Renderer);
+	}
 }
 
 std::vector<int> Knight::CalculatePossibleMoves()

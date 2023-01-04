@@ -16,8 +16,11 @@ Pawn::~Pawn()
 
 void Pawn::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
-	this->CalculateMovesForCheck();
-	this->RenderPossMovesBlock(Renderer);
+	if (!Piece::EndGameReached())
+	{
+		this->CalculateLegitMoves();
+		this->RenderPossMovesBlock(Renderer);
+	}
 }
 
 std::vector<int> Pawn::CalculatePossibleMoves()
@@ -39,6 +42,7 @@ std::vector<int> Pawn::CalculatePossibleMoves()
 		if ((y + 2) < 8 && !boardPosition[x + ((y + 1) * 8)] && !boardPosition[x + ((y + 2) * 8)] && !(this->HasPieceMoved()))
 		{
 			possbleMoves.push_back(x + (y + 2) * 8);
+
 		}
 		//found enemy piece on right
 		if ((y + 1) < 8 && (x + 1) < 8 && boardPosition[(x + 1) + (y + 1) * 8] && boardPosition[(x + 1) + (y + 1) * 8]->GetPieceTeam())
@@ -49,6 +53,16 @@ std::vector<int> Pawn::CalculatePossibleMoves()
 		if ((y + 1) < 8 && (x - 1) > -1 && boardPosition[(x - 1) + (y + 1) * 8] && boardPosition[(x - 1) + (y + 1) * 8]->GetPieceTeam())
 		{
 			possbleMoves.push_back((x - 1) + ((y + 1) * 8));
+		}
+
+		//EnPassasnt Logic
+		if (x - 1 > -1 && y + 1 < 8 && Piece::enPassant != 99 && Piece::enPassant == x + (y * 8) && !boardPosition[(x - 1) + (y + 1) * 8] && boardPosition[(x - 1) + y * 8] && boardPosition[(x - 1) + y * 8]->GetPieceType() == PAWN)
+		{
+			possbleMoves.push_back((x - 1) + ((y + 1) * 8));
+		}
+		else if (x + 1 < 8 && y + 1 < 8 && Piece::enPassant != 99 && Piece::enPassant == (x + (y * 8)) * 100 && !boardPosition[(x + 1) + (y + 1) * 8] && boardPosition[(x + 1) + y * 8] && boardPosition[(x + 1) + y * 8]->GetPieceType() == PAWN)
+		{
+			possbleMoves.push_back((x + 1) + ((y + 1) * 8));
 		}
 	}
 
@@ -74,6 +88,16 @@ std::vector<int> Pawn::CalculatePossibleMoves()
 		if ((y - 1) > -1 && (x - 1) > -1 && boardPosition[(x - 1) + (y - 1) * 8] && !boardPosition[(x - 1) + (y - 1) * 8]->GetPieceTeam())
 		{
 			possbleMoves.push_back((x - 1) + ((y - 1) * 8));
+		}
+		
+		//EnPassasnt Logic
+		if (x - 1 > -1 && y - 1 > -1 && Piece::enPassant != 99 && Piece::enPassant == x + (y * 8) && !boardPosition[(x - 1) + (y - 1) * 8] && boardPosition[(x - 1) + y * 8] && boardPosition[(x - 1) + y * 8]->GetPieceType() == PAWN)
+		{
+			possbleMoves.push_back((x - 1) + ((y - 1) * 8));
+		}
+		else if (x + 1 < 8 && y - 1 > -1 && Piece::enPassant != 99 && Piece::enPassant == (x + (y * 8)) * 100 && !boardPosition[(x + 1) + (y - 1) * 8] && boardPosition[(x + 1) + y * 8] && boardPosition[(x + 1) + y * 8]->GetPieceType() == PAWN)
+		{
+			possbleMoves.push_back((x + 1) + ((y - 1) * 8));
 		}
 	}
 	return possbleMoves;

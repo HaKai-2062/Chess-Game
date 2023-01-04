@@ -16,8 +16,11 @@ Queen::~Queen()
 
 void Queen::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
-	this->CalculateMovesForCheck();
-	this->RenderPossMovesBlock(Renderer);
+	if (!Piece::EndGameReached())
+	{
+		this->CalculateLegitMoves();
+		this->RenderPossMovesBlock(Renderer);
+	}
 }
 
 std::vector<int> Queen::CalculatePossibleMoves()
