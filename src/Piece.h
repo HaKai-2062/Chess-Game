@@ -24,6 +24,7 @@ public:
 	void RenderPossMovesBlock(SDL_Renderer*);
 	void MoveThePiece(SDL_Renderer*, int, bool&);
 	void SetKingVariables();
+	bool IsLegitMove(const int&);
 
 	//every derived class must have these functions
 	virtual void RenderPossibleMoves(SDL_Renderer*) = 0;

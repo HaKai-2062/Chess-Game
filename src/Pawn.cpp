@@ -26,6 +26,7 @@ std::vector<int> Pawn::CalculatePossibleMoves()
 	int y = static_cast<int>(this->GetPieceY());
 	std::vector<int> possbleMoves;
 
+	possbleMoves.clear();
 	//Render Black Pawn Moves
 	if (!this->GetPieceTeam())
 	{

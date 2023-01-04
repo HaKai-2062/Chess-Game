@@ -29,7 +29,7 @@ std::vector<int> Bishop::CalculatePossibleMoves()
 	int arrayX[4] = { x + 1, x + 1, x - 1, x - 1 };
 	int arrayY[4] = { y + 1, y - 1, y + 1, y - 1 };
 
-
+	possbleMoves.clear();
 	for (int i = 0; i < 4; i++)
 	{
 		while (arrayX[i] > -1 && arrayX[i] < 8 && arrayY[i] > -1 && arrayY[i] < 8)
