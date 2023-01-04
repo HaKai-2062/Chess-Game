@@ -19,8 +19,8 @@ You can add the bin2c.exe and C_File_Generator.bat inside the Resource_Files Fol
 ## Windows
 - Make sure you have [Git](https://git-scm.com/downloads) installed on your system.
 - Go to the directory where you want to store all the raw files and build it.
-- Right click inside the directory anmd open Git Bash.
-- Paste the following command in gut bash:
+- Right click inside the directory and open Git Bash.
+- Paste the following command in Git Bash:
 ```
     git clone https://github.com/HaKaiiii/Chess-The-Game.git
 ```

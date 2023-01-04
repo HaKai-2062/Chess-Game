@@ -24,9 +24,11 @@ std::vector<int> Bishop::CalculatePossibleMoves()
 {
 	int x = static_cast<int>(this->GetPieceX());
 	int y = static_cast<int>(this->GetPieceY());
+	std::vector<int> possbleMoves;
 
 	int arrayX[4] = { x + 1, x + 1, x - 1, x - 1 };
 	int arrayY[4] = { y + 1, y - 1, y + 1, y - 1 };
+
 
 	for (int i = 0; i < 4; i++)
 	{
@@ -34,11 +36,11 @@ std::vector<int> Bishop::CalculatePossibleMoves()
 		{
 			//no piece present
 			if (!boardPosition[arrayX[i] + (arrayY[i] * 8)])
-				this->PossibleMovesVector().push_back(arrayX[i] + (arrayY[i] * 8));
+				possbleMoves.push_back(arrayX[i] + (arrayY[i] * 8));
 			//if enemy piece present
 			else if (boardPosition[arrayX[i] + (arrayY[i] * 8)] && boardPosition[arrayX[i] + (arrayY[i] * 8)]->GetPieceTeam() != this->GetPieceTeam())
 			{
-				this->PossibleMovesVector().push_back(arrayX[i] + (arrayY[i] * 8));
+				possbleMoves.push_back(arrayX[i] + (arrayY[i] * 8));
 				//no need to loop further in row
 				break;
 			}
@@ -68,5 +70,5 @@ std::vector<int> Bishop::CalculatePossibleMoves()
 			}
 		}
 	}
-	return this->PossibleMovesVector();
+	return possbleMoves;
 }
