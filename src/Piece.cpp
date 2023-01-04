@@ -172,6 +172,8 @@ void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& 
 	Piece::SetEnPassant(xStart, yStart, xEnd, yEnd);
 
 	this->m_hasMoved = true;
+
+	Piece::EndGameReached();
 }
 
 void Piece::RenderPossMovesBlock(SDL_Renderer* Renderer)
@@ -238,67 +240,72 @@ void Piece::SetKingVariables()
 
 bool Piece::EndGameReached()
 {
-	/*
 	//Stalemate and Checkmates are set to true initially and moves are calculated later on
-	bool staleMate_W = true;
-	bool staleMate_B = true;
-	bool checkMate_W = false;
-	bool checkMate_B = false;
+	bool staleMateWhite = true;
+	bool staleMateBlack = true;
 
-	
+	int tempVar1 = 0;
+	int tempVar2 = 0;
 	
 	for (int i = 0; i < 64; i++)
 	{
-		if (boardPosition[i] && this->GetPieceTeam() == boardPosition[i]->GetPieceTeam())
+		if (boardPosition[i] && this->GetPieceTeam() != boardPosition[i]->GetPieceTeam())
 		{
 			boardPosition[i]->CalculateLegitMoves();
 			std::cout << boardPosition[i]->PossibleMovesVector().size() << std::endl;
-			//White Piece
+
+			//White Piece so Black King is under danger
 			if (this->GetPieceTeam())
 			{
-				if (Piece::isWhiteInCheck && boardPosition[i]->PossibleMovesVector().size() != 0)
-					checkMate_W = false;
+				//this variable just counts our pieces
+				tempVar1++;
+				if (Piece::isBlackInCheck && boardPosition[i]->PossibleMovesVector().size() == 0)
+					//this variables is used to store the pieces that can no longer make a move
+					tempVar2++;
 
-				else if (boardPosition[i]->PossibleMovesVector().size() != 0)
-					staleMate_W = false;
+				if (boardPosition[i]->PossibleMovesVector().size() != 0)
+					staleMateWhite = false;
 			}
 
-			//Black Piece
+			//Black Piece so White King is under danger
 			else if (!this->GetPieceTeam())
 			{
-				if (Piece::isBlackInCheck && boardPosition[i]->PossibleMovesVector().size() != 0)
-					checkMate_B = false;
+				//this variable just counts our pieces
+				tempVar1++;
+				if (Piece::isWhiteInCheck && boardPosition[i]->PossibleMovesVector().size() == 0)
+					//this variables is used to store the pieces that can no longer make a move
+					tempVar2++;
 				
-				else if (boardPosition[i]->PossibleMovesVector().size() != 0)
-					staleMate_B = false;
+				if (boardPosition[i]->PossibleMovesVector().size() != 0)
+					staleMateBlack = false;
 			}
+
 			boardPosition[i]->PossibleMovesVector().clear();
 		}
 
 	}
 	
-	if (checkMate_W)
+	if (this->GetPieceTeam() && tempVar1 == tempVar2)
 	{
 		std::cout << "Checkmated White ;)" << std::endl;
 		return true;
 	}
-
-	else if (checkMate_B)
+	else if (!this->GetPieceTeam() && tempVar1 == tempVar2)
 	{
 		std::cout << "Checkmated Black ;)" << std::endl;
 		return true;
 	}
-	else if (staleMate_W)
+	else if (this->GetPieceTeam() && staleMateWhite)
 	{
 		std::cout << "Stalemate reached by White King :o" << std::endl;
 		return true;
 	}
-	else if (staleMate_B)
+	else if (!this->GetPieceTeam() && staleMateBlack)
 	{
 		std::cout << "Stalemate reached by Black King :o" << std::endl;
 		return true;
 	}
-	*/
+	
 	return false;
 }
 

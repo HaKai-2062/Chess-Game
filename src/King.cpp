@@ -16,11 +16,8 @@ King::~King()
 
 void King::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
-	if (!Piece::EndGameReached())
-	{
-		this->CalculateLegitMoves();
-		this->RenderPossMovesBlock(Renderer);
-	}
+	this->CalculateLegitMoves();
+	this->RenderPossMovesBlock(Renderer);
 }
 
 std::vector<int> King::CalculatePossibleMoves()
