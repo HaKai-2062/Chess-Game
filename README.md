@@ -22,13 +22,13 @@ You can add the bin2c.exe and C_File_Generator.bat inside the Resource_Files Fol
 - Right click inside the directory and open Git Bash.
 - Paste the following command in Git Bash:
 ```
-    git clone https://github.com/HaKaiiii/Chess-The-Game.git
+git clone https://github.com/HaKaiiii/Chess-The-Game.git
 ```
 - After that open **Chess The Game.sln** in Visual Studio to build the project from solution.
 - All the required libraries are already present (statically linked) and all the assets are taken from [PNGEGG](https://www.pngegg.com)(100x100 size).
 
 # Future Plans
-It currently lacks basic functionalities but after implementing basic functionalities, the plan is to add an AI and probably extend it to be multiplayer(p2p) with basic chat functionalities as well.
+The plan is to add an AI and probably extend it to be multiplayer(p2p) with basic chat functionalities sometime in the future.
 
 # License
 [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html)
