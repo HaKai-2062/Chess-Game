@@ -12,4 +12,5 @@ public:
 
 	void RenderPossibleMoves(SDL_Renderer*);
 	std::vector<int> CalculatePossibleMoves();
+	void SetCastling(std::vector<int>&);
 };

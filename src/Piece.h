@@ -49,7 +49,10 @@ protected:
 	static int whiteKingPos;
 	//enPassant is stored in a hacky way, 1-64 would be piece on right of board, 99 would be not in enPassant and (1-64) * 100 would be piece on left of board
 	static int enPassant;
-	static int enPassantColor;
+	static int enPassantEnd;
+	//to castle both left and right side of king
+	static int castleBlockBlack[2];
+	static int castleBlockWhite[2];
 
 private:
 	SDL_Renderer* m_Renderer = nullptr;

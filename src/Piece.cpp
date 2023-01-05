@@ -35,7 +35,10 @@ int Piece::blackKingPos = 4;
 int Piece::whiteKingPos = 60;
 
 int Piece::enPassant = 99;
-int Piece::enPassantColor = 99;
+int Piece::enPassantEnd = 99;
+
+int Piece::castleBlockBlack[2] = { 99, 99 };
+int Piece::castleBlockWhite[2] = { 99, 99 };
 
 void Piece::RenderThePiece(SDL_Renderer* Renderer, const PieceType& pieceType, const bool& pieceTeam, const float& xPos, const float& yPos)
 {
@@ -124,12 +127,61 @@ void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& 
 {
 	if (currentTurn != this->GetPieceTeam())
 		return;
-
+	
 	int xStart = static_cast<int>(this->GetPieceX());
 	int yStart = static_cast<int>(this->GetPieceY());
 
 	int xEnd = Chess::GetBlockX(boardPositionToMove);
 	int yEnd = Chess::GetBlockY(boardPositionToMove);
+	
+	// White Team Castle
+	if (this->GetPieceType() == KING && this->GetPieceTeam() && (Piece::castleBlockWhite[0] != 99 || Piece::castleBlockWhite[1] != 99))
+	{
+		//on left hand side
+		if (xEnd == Chess::GetBlockX(Piece::castleBlockWhite[0]))
+		{
+			// added 1 because rook goes one block to right of king
+			int temp = Piece::castleBlockWhite[0] + 1;
+			Piece::castleBlockWhite[0] = 99;
+			if (boardPosition[0 + yStart * 8])
+				boardPosition[0 + yStart * 8]->MoveThePiece(Renderer, temp, currentTurn);
+			currentTurn = !currentTurn;
+		}
+		//on right hand side
+		else if (xEnd == Chess::GetBlockX(Piece::castleBlockWhite[1]))
+		{
+			// subtracted 1 because rook goes one block to left of king
+			int temp = Piece::castleBlockWhite[1] - 1;
+			Piece::castleBlockWhite[1] = 99;
+			if (boardPosition[7 + yStart * 8])
+				boardPosition[7 + yStart * 8]->MoveThePiece(Renderer, temp, currentTurn);
+			currentTurn = !currentTurn;
+		}
+	}
+	// Black Team Castle
+	else if (this->GetPieceType() == KING && !this->GetPieceTeam() && (Piece::castleBlockBlack[0] != 99 || Piece::castleBlockBlack[1] != 99))
+	{
+		//on left hand side
+		if (xEnd == Chess::GetBlockX(Piece::castleBlockBlack[0]))
+		{
+			// added 1 because rook goes one block to right of king
+			int temp = Piece::castleBlockBlack[0] + 1;
+			Piece::castleBlockBlack[0] = 99;
+			if (boardPosition[0 + yStart * 8])
+				boardPosition[0 + yStart * 8]->MoveThePiece(Renderer, temp, currentTurn);
+			currentTurn = !currentTurn;
+		}
+		//on right hand side
+		else if (xEnd == Chess::GetBlockX(Piece::castleBlockBlack[1]))
+		{
+			// subtracted 1 because rook goes one block to left of king
+			int temp = Piece::castleBlockBlack[1] - 1;
+			Piece::castleBlockBlack[1] = 99;
+			if (boardPosition[7 + yStart * 8])
+				boardPosition[7 + yStart * 8]->MoveThePiece(Renderer, temp, currentTurn);
+			currentTurn = !currentTurn;
+		}
+	}
 
 	// Set the number of steps for the animation
 	float steps = 16.0f;
@@ -185,17 +237,22 @@ void Piece::RenderPossMovesBlock(SDL_Renderer* Renderer)
 		//enemy piece found
 		if (boardPosition[this->PossibleMovesVector()[i]] && boardPosition[this->PossibleMovesVector()[i]]->GetPieceTeam() != this->GetPieceTeam())
 		{
-			SDL_SetRenderDrawColor(Renderer, 255, 20, 25, 96);
+			SDL_SetRenderDrawColor(Renderer, 255, 20, 25, 128);
 		}
 		//coloring if we are caching the piece by enPassant
-		else if (Piece::enPassantColor != 99 && !boardPosition[this->PossibleMovesVector()[i]] && Piece::enPassantColor == this->PossibleMovesVector()[i])
+		else if (Piece::enPassantEnd != 99 && !boardPosition[this->PossibleMovesVector()[i]] && Piece::enPassantEnd == this->PossibleMovesVector()[i])
 		{
-			SDL_SetRenderDrawColor(Renderer, 255, 20, 25, 96);
+			SDL_SetRenderDrawColor(Renderer, 115, 0, 247, 150);
 		}
-		//empty piece found
-		else
+		//set castling piece color here
+		else if (this->GetPieceType() == KING && !boardPosition[this->PossibleMovesVector()[i]] && (this->PossibleMovesVector()[i] == Piece::castleBlockWhite[0] || this->PossibleMovesVector()[i] == Piece::castleBlockWhite[1] || this->PossibleMovesVector()[i] == Piece::castleBlockBlack[0] || this->PossibleMovesVector()[i] == Piece::castleBlockBlack[1]))
 		{
-			SDL_SetRenderDrawColor(Renderer, 0, 255, 25, 96);
+			SDL_SetRenderDrawColor(Renderer, 115, 0, 247, 150);
+		}
+		//empty block found
+		else if (!boardPosition[this->PossibleMovesVector()[i]])
+		{
+			SDL_SetRenderDrawColor(Renderer, 0, 255, 25, 128);
 		}
 		SDL_RenderFillRect(Renderer, &temp1);
 	}
@@ -252,8 +309,6 @@ bool Piece::EndGameReached()
 		if (boardPosition[i] && this->GetPieceTeam() != boardPosition[i]->GetPieceTeam())
 		{
 			boardPosition[i]->CalculateLegitMoves();
-			std::cout << boardPosition[i]->PossibleMovesVector().size() << std::endl;
-
 			//White Piece so Black King is under danger
 			if (this->GetPieceTeam())
 			{
@@ -407,7 +462,7 @@ void Piece::SetEnPassant(const int& xStart, const int& yStart, const int& x, con
 	else if (Piece::enPassant != 99 && Piece::enPassant != xStart + (yStart * 8) && Piece::enPassant != (xStart + (yStart * 8)) * 100)
 	{
 		Piece::enPassant = 99;
-		Piece::enPassantColor = 99;
+		Piece::enPassantEnd = 99;
 	}
 
 	//if "this" can be captured by enPassant then save it
@@ -419,9 +474,9 @@ void Piece::SetEnPassant(const int& xStart, const int& yStart, const int& x, con
 			Piece::enPassant = ((x + 1) + (y * 8));
 			
 			if (this->GetPieceTeam())
-				Piece::enPassantColor = x + (y + 1) * 8;
+				Piece::enPassantEnd = x + (y + 1) * 8;
 			else
-				Piece::enPassantColor = x + (y - 1) * 8;
+				Piece::enPassantEnd = x + (y - 1) * 8;
 		}
 		//piece on left of board
 		else if (boardPosition[(x - 1) + (y * 8)] && boardPosition[(x - 1) + (y * 8)]->GetPieceTeam() != this->GetPieceTeam() && boardPosition[(x - 1) + (y * 8)]->GetPieceType() == PAWN)
@@ -429,9 +484,9 @@ void Piece::SetEnPassant(const int& xStart, const int& yStart, const int& x, con
 			Piece::enPassant = ((x - 1) + (y * 8)) * 100;
 			
 			if (this->GetPieceTeam())
-				Piece::enPassantColor = x + (y + 1) * 8;
+				Piece::enPassantEnd = x + (y + 1) * 8;
 			else
-				Piece::enPassantColor = x + (y - 1) * 8;
+				Piece::enPassantEnd = x + (y - 1) * 8;
 		}
 	}
 }

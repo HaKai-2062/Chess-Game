@@ -4,7 +4,7 @@
 
 # Introduction
 
-This repository contains a beta version of a chess game but at the moment it lacks the special chess rules like en passant or castling. It uses [SDL2](https://github.com/libsdl-org/SDL) and [SDL2_image](https://github.com/libsdl-org/SDL_image) for drawing and rendering the textures.
+This repository contains a beta version of a chess game with basic functionalities like enPassant and castling. It uses [SDL2](https://github.com/libsdl-org/SDL) and [SDL2_image](https://github.com/libsdl-org/SDL_image) for drawing and rendering the textures.
 
 # Softwares used
 ## Visual Studio
@@ -25,6 +25,7 @@ You can add the bin2c.exe and C_File_Generator.bat inside the Resource_Files Fol
 git clone https://github.com/HaKaiiii/Chess-The-Game.git
 ```
 - After that open **Chess The Game.sln** in Visual Studio to build the project from solution.
+- Make sure to set Visual Studio to Release mode with x64 architecture.
 - All the required libraries are already present (statically linked) and all the assets are taken from [PNGEGG](https://www.pngegg.com)(100x100 size).
 
 # Future Plans
