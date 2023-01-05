@@ -4,7 +4,7 @@
 #include <SDL2/SDL_image.h>
 #include <string>
 #include <vector>
-
+#include <iostream>
 
 /*
 struct PieceInfo

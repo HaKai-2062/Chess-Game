@@ -1,3 +1,4 @@
+//need these files for promotion stuff
 #include "Piece.h"
 #include "Pawn.h"
 #include "Knight.h"
@@ -6,7 +7,6 @@
 #include "Queen.h"
 #include "King.h"
 
-#include <iostream>
 #include <cmath>
 
 #include "C_Files/bishop.c"
@@ -269,10 +269,33 @@ bool Piece::EndGameReached()
 	int tempVar1 = 0;
 	int tempVar2 = 0;
 
+	//enum value is stored and we evaluate the pieces left
+	std::vector<int> friendlyPieces;
+	std::vector<int> enemyPieces;
+	friendlyPieces.clear();
+	enemyPieces.clear();
+
 	for (int i = 0; i < 64; i++)
 	{
 		if (boardPosition[i] && this->GetPieceTeam() != boardPosition[i]->GetPieceTeam())
 		{
+			//6 is a light bishop
+			if (boardPosition[i]->GetPieceType() == BISHOP)
+			{
+				int x = static_cast<int>(boardPosition[i]->GetPieceX());
+				int y = static_cast<int>(boardPosition[i]->GetPieceY());
+
+				//light bishops (even)
+				if ((y % 2) == (x + (y * 8)) % 2)
+					enemyPieces.push_back(boardPosition[i]->GetPieceType());
+				//dark bishops
+				else
+					enemyPieces.push_back(6);
+			}
+			//All Pieces except bishops are stored
+			if (boardPosition[i]->GetPieceType() != BISHOP)
+				enemyPieces.push_back(boardPosition[i]->GetPieceType());
+			
 			boardPosition[i]->CalculateLegitMoves();
 			//White Piece so Black King is under danger
 			if (this->GetPieceTeam())
@@ -302,7 +325,25 @@ bool Piece::EndGameReached()
 
 			boardPosition[i]->PossibleMovesVector().clear();
 		}
+		else if (boardPosition[i] && this->GetPieceTeam() == boardPosition[i]->GetPieceTeam())
+		{
+			//6 is a light bishop
+			if (boardPosition[i]->GetPieceType() == BISHOP)
+			{
+				int x = static_cast<int>(boardPosition[i]->GetPieceX());
+				int y = static_cast<int>(boardPosition[i]->GetPieceY());
 
+				//light bishops (even)
+				if ((y % 2) == (x + (y * 8)) % 2)
+					friendlyPieces.push_back(boardPosition[i]->GetPieceType());
+				//dark bishops
+				else
+					friendlyPieces.push_back(6);
+			}
+			//All Pieces except bishops are stored
+			if (boardPosition[i]->GetPieceType() != BISHOP)
+				friendlyPieces.push_back(boardPosition[i]->GetPieceType());
+		}
 	}
 	
 	if (this->GetPieceTeam() && tempVar1 == tempVar2)
@@ -324,6 +365,39 @@ bool Piece::EndGameReached()
 	{
 		std::cout << "Stalemate reached by Black King :o" << std::endl;
 		return true;
+	}
+
+	//only checking this condition because after the change of turn this condition will automatically be set to true
+	if (friendlyPieces.size() >= enemyPieces.size())
+	{
+		if (friendlyPieces.size() == 1 && friendlyPieces[0] == KING && enemyPieces[0] == KING)
+		{
+			std::cout << "DeadPosition: King vs King" << std::endl;
+			return true;
+		}
+		else if (friendlyPieces.size() == 2 && enemyPieces.size() == 1 && ((friendlyPieces[0] == KING && friendlyPieces[1] == BISHOP) || (friendlyPieces[1] == KING && friendlyPieces[0] == BISHOP)) && enemyPieces[0] == KING)
+		{
+			std::cout << "DeadPosition: King and Bishop vs King" << std::endl;
+			return true;
+		}
+		else if (friendlyPieces.size() == 2 && enemyPieces.size() == 1 && ((friendlyPieces[0] == KING && friendlyPieces[1] == KNIGHT) || (friendlyPieces[1] == KING && friendlyPieces[0] == KNIGHT)) && enemyPieces[0] == KING)
+		{
+			std::cout << "DeadPosition: King and Knight vs King" << std::endl;
+			return true;
+		}
+		else if (friendlyPieces.size() == 2 && enemyPieces.size() == 2)
+		{
+			if ((friendlyPieces[0] == KING && friendlyPieces[1] == BISHOP || (friendlyPieces[1] == KING && friendlyPieces[0] == BISHOP)) && (enemyPieces[0] == KING && enemyPieces[1] == BISHOP || (enemyPieces[1] == KING && enemyPieces[0] == BISHOP)))
+			{
+				std::cout << "DeadPosition: King and Bishop(Light Squared) vs King and Bishop(Light Squared)" << std::endl;
+				return true;
+			}
+			else if ((friendlyPieces[0] == KING && friendlyPieces[1] == 6 || (friendlyPieces[1] == KING && friendlyPieces[0] == 6)) && (enemyPieces[0] == KING && enemyPieces[1] == 6 || (enemyPieces[1] == KING && enemyPieces[0] == 6)))
+			{
+				std::cout << "DeadPosition: King and Bishop(Dark Squared) vs King and Bishop(Dark Squared)" << std::endl;
+				return true;
+			}
+		}
 	}
 	
 	return false;
