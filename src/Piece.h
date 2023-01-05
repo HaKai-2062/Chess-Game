@@ -25,6 +25,7 @@ public:
 	void MoveThePiece(SDL_Renderer*, int, bool&);
 	void SetKingVariables();
 	void SetEnPassant(const int&, const int&, const int&, const int&);
+	void SetCastling(SDL_Renderer*, const int&, const int&, bool&);
 	bool EndGameReached();
 
 	//every derived class must have these functions

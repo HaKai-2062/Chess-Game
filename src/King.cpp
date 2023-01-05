@@ -17,7 +17,7 @@ King::~King()
 void King::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
 	this->CalculateLegitMoves();
-	King::SetCastling(this->PossibleMovesVector());
+	King::PushCastlingMove(this->PossibleMovesVector());
 	this->RenderPossMovesBlock(Renderer);
 }
 
@@ -43,7 +43,7 @@ std::vector<int> King::CalculatePossibleMoves()
 	return possibleMoves;
 }
 
-void King::SetCastling(std::vector<int>& possibleMoves)
+void King::PushCastlingMove(std::vector<int>& possibleMoves)
 {
 	int x = static_cast<int>(this->GetPieceX());
 	int y = static_cast<int>(this->GetPieceY());

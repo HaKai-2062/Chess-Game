@@ -134,55 +134,6 @@ void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& 
 	int xEnd = Chess::GetBlockX(boardPositionToMove);
 	int yEnd = Chess::GetBlockY(boardPositionToMove);
 	
-	// White Team Castle
-	if (this->GetPieceType() == KING && this->GetPieceTeam() && (Piece::castleBlockWhite[0] != 99 || Piece::castleBlockWhite[1] != 99))
-	{
-		//on left hand side
-		if (xEnd == Chess::GetBlockX(Piece::castleBlockWhite[0]))
-		{
-			// added 1 because rook goes one block to right of king
-			int temp = Piece::castleBlockWhite[0] + 1;
-			Piece::castleBlockWhite[0] = 99;
-			if (boardPosition[0 + yStart * 8])
-				boardPosition[0 + yStart * 8]->MoveThePiece(Renderer, temp, currentTurn);
-			currentTurn = !currentTurn;
-		}
-		//on right hand side
-		else if (xEnd == Chess::GetBlockX(Piece::castleBlockWhite[1]))
-		{
-			// subtracted 1 because rook goes one block to left of king
-			int temp = Piece::castleBlockWhite[1] - 1;
-			Piece::castleBlockWhite[1] = 99;
-			if (boardPosition[7 + yStart * 8])
-				boardPosition[7 + yStart * 8]->MoveThePiece(Renderer, temp, currentTurn);
-			currentTurn = !currentTurn;
-		}
-	}
-	// Black Team Castle
-	else if (this->GetPieceType() == KING && !this->GetPieceTeam() && (Piece::castleBlockBlack[0] != 99 || Piece::castleBlockBlack[1] != 99))
-	{
-		//on left hand side
-		if (xEnd == Chess::GetBlockX(Piece::castleBlockBlack[0]))
-		{
-			// added 1 because rook goes one block to right of king
-			int temp = Piece::castleBlockBlack[0] + 1;
-			Piece::castleBlockBlack[0] = 99;
-			if (boardPosition[0 + yStart * 8])
-				boardPosition[0 + yStart * 8]->MoveThePiece(Renderer, temp, currentTurn);
-			currentTurn = !currentTurn;
-		}
-		//on right hand side
-		else if (xEnd == Chess::GetBlockX(Piece::castleBlockBlack[1]))
-		{
-			// subtracted 1 because rook goes one block to left of king
-			int temp = Piece::castleBlockBlack[1] - 1;
-			Piece::castleBlockBlack[1] = 99;
-			if (boardPosition[7 + yStart * 8])
-				boardPosition[7 + yStart * 8]->MoveThePiece(Renderer, temp, currentTurn);
-			currentTurn = !currentTurn;
-		}
-	}
-
 	// Set the number of steps for the animation
 	float steps = 16.0f;
 
@@ -214,16 +165,20 @@ void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& 
 	//set prev piece position to null
 	boardPosition[startPosition] = nullptr;
 
-	//change the turn
-	currentTurn = !currentTurn;
-
 	//if king then set its position and set the kingInCheck flag
 	Piece::SetKingVariables();
 
-	//Set EnPassant here
+	//Set EnPassant Move here
 	Piece::SetEnPassant(xStart, yStart, xEnd, yEnd);
 
+	//Set Castling Move here
+	Piece::SetCastling(Renderer, xEnd, yEnd, currentTurn);
+
+	//piece moved set to true
 	this->m_hasMoved = true;
+
+	//change the turn
+	currentTurn = !currentTurn;
 
 	Piece::EndGameReached();
 }
@@ -487,6 +442,58 @@ void Piece::SetEnPassant(const int& xStart, const int& yStart, const int& x, con
 				Piece::enPassantEnd = x + (y + 1) * 8;
 			else
 				Piece::enPassantEnd = x + (y - 1) * 8;
+		}
+	}
+}
+
+void Piece::SetCastling(SDL_Renderer* Renderer, const int& x, const int& y, bool& currentTurn)
+{
+	// White Team Castle
+	if (this->GetPieceType() == KING && this->GetPieceTeam() && (Piece::castleBlockWhite[0] != 99 || Piece::castleBlockWhite[1] != 99))
+	{
+		//on left hand side
+		if (x == Chess::GetBlockX(Piece::castleBlockWhite[0]))
+		{
+			// added 1 because rook goes one block to right of king
+			int temp = Piece::castleBlockWhite[0] + 1;
+			Piece::castleBlockWhite[0] = 99;
+			if (boardPosition[0 + y * 8])
+				boardPosition[0 + y * 8]->MoveThePiece(Renderer, temp, currentTurn);
+			currentTurn = !currentTurn;
+		}
+		//on right hand side
+		else if (x == Chess::GetBlockX(Piece::castleBlockWhite[1]))
+		{
+			// subtracted 1 because rook goes one block to left of king
+			int temp = Piece::castleBlockWhite[1] - 1;
+			Piece::castleBlockWhite[1] = 99;
+			if (boardPosition[7 + y * 8])
+				boardPosition[7 + y * 8]->MoveThePiece(Renderer, temp, currentTurn);
+			currentTurn = !currentTurn;
+		}
+	}
+	// Black Team Castle
+	else if (this->GetPieceType() == KING && !this->GetPieceTeam() && (Piece::castleBlockBlack[0] != 99 || Piece::castleBlockBlack[1] != 99))
+	{
+		//on left hand side
+		if (x == Chess::GetBlockX(Piece::castleBlockBlack[0]))
+		{
+			// added 1 because rook goes one block to right of king
+			int temp = Piece::castleBlockBlack[0] + 1;
+			Piece::castleBlockBlack[0] = 99;
+			if (boardPosition[0 + y * 8])
+				boardPosition[0 + y * 8]->MoveThePiece(Renderer, temp, currentTurn);
+			currentTurn = !currentTurn;
+		}
+		//on right hand side
+		else if (x == Chess::GetBlockX(Piece::castleBlockBlack[1]))
+		{
+			// subtracted 1 because rook goes one block to left of king
+			int temp = Piece::castleBlockBlack[1] - 1;
+			Piece::castleBlockBlack[1] = 99;
+			if (boardPosition[7 + y * 8])
+				boardPosition[7 + y * 8]->MoveThePiece(Renderer, temp, currentTurn);
+			currentTurn = !currentTurn;
 		}
 	}
 }
