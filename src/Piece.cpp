@@ -1,4 +1,11 @@
 #include "Piece.h"
+#include "Pawn.h"
+#include "Knight.h"
+#include "Bishop.h"
+#include "Rook.h"
+#include "Queen.h"
+#include "King.h"
+
 #include <iostream>
 #include <cmath>
 
@@ -174,6 +181,9 @@ void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& 
 	//Set Castling Move here
 	Piece::SetCastling(Renderer, xEnd, yEnd, currentTurn);
 
+	//Set Promotion here
+	Piece::SetPawnPromotion(Renderer, xEnd, yEnd);
+
 	//piece moved set to true
 	this->m_hasMoved = true;
 
@@ -258,7 +268,7 @@ bool Piece::EndGameReached()
 
 	int tempVar1 = 0;
 	int tempVar2 = 0;
-	
+
 	for (int i = 0; i < 64; i++)
 	{
 		if (boardPosition[i] && this->GetPieceTeam() != boardPosition[i]->GetPieceTeam())
@@ -411,6 +421,7 @@ void Piece::SetEnPassant(const int& xStart, const int& yStart, const int& x, con
 
 		//enPassant resetted
 		Piece::enPassant = 99;
+		Piece::enPassantEnd = 99;
 	}
 
 	//Set enPassant to false if some other piece has moved
@@ -496,4 +507,25 @@ void Piece::SetCastling(SDL_Renderer* Renderer, const int& x, const int& y, bool
 			currentTurn = !currentTurn;
 		}
 	}
+}
+void Piece::SetPawnPromotion(SDL_Renderer* Renderer, const int& x, const int& y)
+{
+	//since pawns dont move back so only checking boundary conditions
+	if (this->GetPieceType() == PAWN &&  (y == 0 || y == 7))
+	{
+		//show some selection here
+		int selection = KNIGHT;
+
+		delete boardPosition[x + y * 8];
+		if (selection == QUEEN)
+			boardPosition[x + y * 8] = new Queen(Renderer, this->GetPieceTeam(), (float)x, (float)y);
+		else if (selection == ROOK)
+			boardPosition[x + y * 8] = new Rook(Renderer, this->GetPieceTeam(), (float)x, (float)y);
+		else if (selection == BISHOP)
+			boardPosition[x + y * 8] = new Bishop(Renderer, this->GetPieceTeam(), (float)x, (float)y);
+		else if (selection == KNIGHT)
+			boardPosition[x + y * 8] = new Knight(Renderer, this->GetPieceTeam(), (float)x, (float)y);
+
+	}
+
 }

@@ -1,15 +1,14 @@
 #include <iostream>
 #include "Renderer.h"
 
+#include "C_Files/icon.c"
+
 #include "Pawn.h"
 #include "Knight.h"
 #include "Bishop.h"
 #include "Rook.h"
 #include "Queen.h"
 #include "King.h"
-
-#include "C_Files/icon.c"
-
 /*
 |-|-|-|-|-|-|-|-|
 |-|-|-|-|-|-|-|-|

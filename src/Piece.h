@@ -26,6 +26,7 @@ public:
 	void SetKingVariables();
 	void SetEnPassant(const int&, const int&, const int&, const int&);
 	void SetCastling(SDL_Renderer*, const int&, const int&, bool&);
+	void SetPawnPromotion(SDL_Renderer*, const int&, const int&);
 	bool EndGameReached();
 
 	//every derived class must have these functions
