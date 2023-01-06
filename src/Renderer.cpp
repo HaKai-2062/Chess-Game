@@ -10,6 +10,11 @@
 #include "Queen.h"
 #include "King.h"
 
+#include "C_Files/game_ended1.c"
+#include "C_Files/game_ended2.c"
+#include "C_Files/game_ended3.c"
+#include "C_Files/game_start.c"
+
 /*
 |-|-|-|-|-|-|-|-|
 |-|-|-|-|-|-|-|-|
@@ -86,6 +91,11 @@ void Chess::MainRenderer()
 				Chess::DrawChessBoard(Renderer);
 				initialRun = false;
 				Chess::Init(Renderer);
+				//Chess::AddGaussianBlur(Renderer);
+				
+				//Draw play button
+
+
 				SDL_RenderPresent(Renderer);
 			}
 
@@ -327,7 +337,35 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 					else if (promotion == 99)
 					{
 						Chess::AddGaussianBlur(Renderer);
-						//show endscreen here
+
+						SDL_Rect pieceRect{};
+						pieceRect.w = WIDTH / 2;
+						pieceRect.h = HEIGHT / 2;
+						pieceRect.y = pieceRect.h/2;
+						pieceRect.x = pieceRect.w/2;
+
+						if (gameEnded == 1)
+						{
+							SDL_RWops* tempRwops1 = SDL_RWFromMem((void*)game_ended1_png, sizeof(game_ended1_png));
+							SDL_Surface* tempSurface1 = IMG_Load_RW(tempRwops1, 1);
+							SDL_Texture* tempTexture1 = SDL_CreateTextureFromSurface(Renderer, tempSurface1);
+							SDL_RenderCopy(Renderer, tempTexture1, nullptr, &pieceRect);
+						}
+						else if (gameEnded == 2)
+						{
+							SDL_RWops* tempRwops2 = SDL_RWFromMem((void*)game_ended2_png, sizeof(game_ended2_png));
+							SDL_Surface* tempSurface2 = IMG_Load_RW(tempRwops2, 1);
+							SDL_Texture* tempTexture2 = SDL_CreateTextureFromSurface(Renderer, tempSurface2);
+							SDL_RenderCopy(Renderer, tempTexture2, nullptr, &pieceRect);
+						}
+						else if (gameEnded == 3 || gameEnded == 4)
+						{
+							SDL_RWops* tempRwops3 = SDL_RWFromMem((void*)game_ended3_png, sizeof(game_ended3_png));
+							SDL_Surface* tempSurface3 = IMG_Load_RW(tempRwops3, 1);
+							SDL_Texture* tempTexture3 = SDL_CreateTextureFromSurface(Renderer, tempSurface3);
+							SDL_RenderCopy(Renderer, tempTexture3, nullptr, &pieceRect);
+						}
+						//Add play button here
 						SDL_RenderPresent(Renderer);
 					}
 
