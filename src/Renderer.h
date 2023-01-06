@@ -28,9 +28,13 @@ namespace Chess
 	int GetBlockX(const int&);
 	int GetBlockY(const int&);
 	float Lerp(const int&, const int&, const float&);
+	void AddGaussianBlur(SDL_Renderer*);
 }
 
 static const int WIDTH = 800;
 static const int HEIGHT = 800;
+//0 = game running, 1 = white checkmated black, 2 = black checkmated white, 3 = stalemate, 4 = deaposition
+extern int gameEnded;
+extern int promotion;
 
 extern Piece** boardPosition;

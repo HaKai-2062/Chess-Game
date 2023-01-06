@@ -348,22 +348,26 @@ bool Piece::EndGameReached()
 	
 	if (this->GetPieceTeam() && tempVar1 == tempVar2)
 	{
-		std::cout << "Checkmated White ;)" << std::endl;
+		std::cout << "White Checkmated Black" << std::endl;
+		gameEnded = 1;
 		return true;
 	}
 	else if (!this->GetPieceTeam() && tempVar1 == tempVar2)
 	{
-		std::cout << "Checkmated Black ;)" << std::endl;
+		std::cout << "Black Checkmated White" << std::endl;
+		gameEnded = 2;
 		return true;
 	}
 	else if (this->GetPieceTeam() && staleMateWhite)
 	{
-		std::cout << "Stalemate reached by White King :o" << std::endl;
+		std::cout << "Stalemate reached for Black" << std::endl;
+		gameEnded = 3;
 		return true;
 	}
 	else if (!this->GetPieceTeam() && staleMateBlack)
 	{
-		std::cout << "Stalemate reached by Black King :o" << std::endl;
+		std::cout << "Stalemate reached for White" << std::endl;
+		gameEnded = 3;
 		return true;
 	}
 
@@ -373,16 +377,19 @@ bool Piece::EndGameReached()
 		if (friendlyPieces.size() == 1 && friendlyPieces[0] == KING && enemyPieces[0] == KING)
 		{
 			std::cout << "DeadPosition: King vs King" << std::endl;
+			gameEnded = 4;
 			return true;
 		}
 		else if (friendlyPieces.size() == 2 && enemyPieces.size() == 1 && ((friendlyPieces[0] == KING && friendlyPieces[1] == BISHOP) || (friendlyPieces[1] == KING && friendlyPieces[0] == BISHOP)) && enemyPieces[0] == KING)
 		{
 			std::cout << "DeadPosition: King and Bishop vs King" << std::endl;
+			gameEnded = 4;
 			return true;
 		}
 		else if (friendlyPieces.size() == 2 && enemyPieces.size() == 1 && ((friendlyPieces[0] == KING && friendlyPieces[1] == KNIGHT) || (friendlyPieces[1] == KING && friendlyPieces[0] == KNIGHT)) && enemyPieces[0] == KING)
 		{
 			std::cout << "DeadPosition: King and Knight vs King" << std::endl;
+			gameEnded = 4;
 			return true;
 		}
 		else if (friendlyPieces.size() == 2 && enemyPieces.size() == 2)
@@ -390,11 +397,13 @@ bool Piece::EndGameReached()
 			if ((friendlyPieces[0] == KING && friendlyPieces[1] == BISHOP || (friendlyPieces[1] == KING && friendlyPieces[0] == BISHOP)) && (enemyPieces[0] == KING && enemyPieces[1] == BISHOP || (enemyPieces[1] == KING && enemyPieces[0] == BISHOP)))
 			{
 				std::cout << "DeadPosition: King and Bishop(Light Squared) vs King and Bishop(Light Squared)" << std::endl;
+				gameEnded = 4;
 				return true;
 			}
 			else if ((friendlyPieces[0] == KING && friendlyPieces[1] == 6 || (friendlyPieces[1] == KING && friendlyPieces[0] == 6)) && (enemyPieces[0] == KING && enemyPieces[1] == 6 || (enemyPieces[1] == KING && enemyPieces[0] == 6)))
 			{
 				std::cout << "DeadPosition: King and Bishop(Dark Squared) vs King and Bishop(Dark Squared)" << std::endl;
+				gameEnded = 4;
 				return true;
 			}
 		}
@@ -587,19 +596,77 @@ void Piece::SetPawnPromotion(SDL_Renderer* Renderer, const int& x, const int& y)
 	//since pawns dont move back so only checking boundary conditions
 	if (this->GetPieceType() == PAWN &&  (y == 0 || y == 7))
 	{
-		//show some selection here
-		int selection = KNIGHT;
+		Chess::AddGaussianBlur(Renderer);
 
-		delete boardPosition[x + y * 8];
-		if (selection == QUEEN)
-			boardPosition[x + y * 8] = new Queen(Renderer, this->GetPieceTeam(), (float)x, (float)y);
-		else if (selection == ROOK)
-			boardPosition[x + y * 8] = new Rook(Renderer, this->GetPieceTeam(), (float)x, (float)y);
-		else if (selection == BISHOP)
-			boardPosition[x + y * 8] = new Bishop(Renderer, this->GetPieceTeam(), (float)x, (float)y);
-		else if (selection == KNIGHT)
-			boardPosition[x + y * 8] = new Knight(Renderer, this->GetPieceTeam(), (float)x, (float)y);
+		SDL_Rect pieceRect{};
+		pieceRect.w = WIDTH / 8;
+		pieceRect.h = HEIGHT / 8;
+		pieceRect.y = 3 * pieceRect.h;
 
+		//queen image
+		pieceRect.x = 2 * pieceRect.w;
+		SDL_RWops* tempRwops1;
+		if (this->GetPieceTeam())
+			tempRwops1 = SDL_RWFromMem((void*)queen_png, sizeof(queen_png));
+		else
+			tempRwops1 = SDL_RWFromMem((void*)queen_bl_png, sizeof(queen_bl_png));
+		SDL_Surface* tempSurface1 = IMG_Load_RW(tempRwops1, 1);
+		SDL_Texture* tempTexture1 = SDL_CreateTextureFromSurface(Renderer, tempSurface1);
+		SDL_RenderCopy(Renderer, tempTexture1, nullptr, &pieceRect);
+
+		//Bishop
+		pieceRect.x = 3 * pieceRect.w;
+		SDL_RWops* tempRwops2;
+		if (this->GetPieceTeam())
+			tempRwops2 = SDL_RWFromMem((void*)bishop_png, sizeof(bishop_png));
+		else
+			tempRwops2 = SDL_RWFromMem((void*)bishop_bl_png, sizeof(bishop_bl_png));
+		SDL_Surface* tempSurface2 = IMG_Load_RW(tempRwops2, 1);
+		SDL_Texture* tempTexture2 = SDL_CreateTextureFromSurface(Renderer, tempSurface2);
+		SDL_RenderCopy(Renderer, tempTexture2, nullptr, &pieceRect);
+
+		//Knight
+		pieceRect.x = 4 * pieceRect.w;
+		SDL_RWops* tempRwops3;
+		if (this->GetPieceTeam())
+			tempRwops3 = SDL_RWFromMem((void*)knight_png, sizeof(knight_png));
+		else
+			tempRwops3 = SDL_RWFromMem((void*)knight_bl_png, sizeof(knight_bl_png));
+		SDL_Surface* tempSurface3 = IMG_Load_RW(tempRwops3, 1);
+		SDL_Texture* tempTexture3 = SDL_CreateTextureFromSurface(Renderer, tempSurface3);
+		SDL_RenderCopy(Renderer, tempTexture3, nullptr, &pieceRect);
+
+		//Rook
+		pieceRect.x = 5 * pieceRect.w;
+		SDL_RWops* tempRwops4;
+		if (this->GetPieceTeam())
+			tempRwops4 = SDL_RWFromMem((void*)rook_png, sizeof(rook_png));
+		else
+			tempRwops4 = SDL_RWFromMem((void*)rook_bl_png, sizeof(rook_bl_png));
+		SDL_Surface* tempSurface4 = IMG_Load_RW(tempRwops4, 1);
+		SDL_Texture* tempTexture4 = SDL_CreateTextureFromSurface(Renderer, tempSurface4);
+		SDL_RenderCopy(Renderer, tempTexture4, nullptr, &pieceRect);
+		
+		//Free Stuff
+		SDL_DestroyTexture(tempTexture1);
+		SDL_FreeRW(tempRwops1);
+		SDL_FreeSurface(tempSurface1);
+
+		SDL_DestroyTexture(tempTexture2);
+		SDL_FreeRW(tempRwops2);
+		SDL_FreeSurface(tempSurface2);
+
+		SDL_DestroyTexture(tempTexture3);
+		SDL_FreeRW(tempRwops3);
+		SDL_FreeSurface(tempSurface3);
+
+		SDL_DestroyTexture(tempTexture4);
+		SDL_FreeRW(tempRwops4);
+		SDL_FreeSurface(tempSurface4);
+
+		SDL_RenderPresent(Renderer);
+		
+		//set game state to promotion
+		promotion = x + y * 8;
 	}
-
 }

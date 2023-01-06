@@ -22,16 +22,23 @@
 */
 
 void MouseButtonPressed(SDL_Renderer*, bool& hasRenderedPossMove, const SDL_Event&, bool&);
+void PromotionSelection(SDL_Renderer*, const SDL_Event&, bool);
 void FreeAllHeapMemory();
 
+void applyBlurRow(SDL_Surface*, int);
+void applyBlurColumn(SDL_Surface*, int);
+const int KERNEL_SIZE = 13;
+const double GAUSSIAN_KERNEL[KERNEL_SIZE] = { 0.0188, 0.0345, 0.0566, 0.0832, 0.1095, 0.1292, 0.1365, 0.1292, 0.1095, 0.0832, 0.0566, 0.0345, 0.0188 };
+
 Piece** boardPosition = new Piece* [64];
+int gameEnded = 0;
+int promotion = 99;
 
 //must declare here or else it doesnt remember ehhhh
 Piece* pieceClicked = nullptr;
 
 void Chess::MainRenderer()
 {
-	bool gameQuit = false;
 	bool hasRenderedPossMoves = false;
 	//true = white false = black
 	bool currentTurn = true;
@@ -43,8 +50,8 @@ void Chess::MainRenderer()
 	SDL_Surface* iconSurface = IMG_Load_RW(iconRW, 1);
 	if (!iconSurface)
 	{
-		MissingTexture(gameQuit, "icon.ico");
-		gameQuit = true;
+		MissingTexture(gameEnded, "icon.ico");
+		gameEnded = 1;
 		return;
 	}
 
@@ -60,7 +67,7 @@ void Chess::MainRenderer()
 
 	bool initialRun = true;
 	SDL_Event gameEvent;
-	while (!gameQuit)
+	while (1)
 	{
 		if (SDL_WaitEvent(&gameEvent))
 		{
@@ -82,9 +89,13 @@ void Chess::MainRenderer()
 				SDL_RenderPresent(Renderer);
 			}
 
-			if (gameEvent.type == SDL_MOUSEBUTTONDOWN)
+			if (gameEvent.type == SDL_MOUSEBUTTONDOWN && !gameEnded && promotion == 99)
 			{
 				MouseButtonPressed(Renderer, hasRenderedPossMoves, gameEvent, currentTurn);
+			}
+			else if (gameEvent.type == SDL_MOUSEBUTTONDOWN && !gameEnded && promotion != 99)
+			{
+				PromotionSelection(Renderer, gameEvent, currentTurn);
 			}
 		}
 		SDL_Delay(10);
@@ -302,13 +313,23 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 						pieceClicked->PossibleMovesVector().clear();
 						pieceClicked = nullptr;
 					}
-
-					//Clear and Rerender pieces if they had any renderedPossMoves before
-					SDL_RenderClear(Renderer);
-					Chess::DestroyAllPieceTextures();
-					Chess::DrawChessBoard(Renderer);
-					Chess::RenderAllPiece(Renderer);
-					SDL_RenderPresent(Renderer);
+					//avoid screen refreshed when promoting/reaching endgame
+					if (!gameEnded && promotion == 99)
+					{
+						//Clear and Rerender pieces if they had any renderedPossMoves before
+						SDL_RenderClear(Renderer);
+						Chess::DestroyAllPieceTextures();
+						Chess::DrawChessBoard(Renderer);
+						Chess::RenderAllPiece(Renderer);
+						SDL_RenderPresent(Renderer);
+					}
+					//only for endscreen, promotion blur is set inside pawn.cpp
+					else if (promotion == 99)
+					{
+						Chess::AddGaussianBlur(Renderer);
+						//show endscreen here
+						SDL_RenderPresent(Renderer);
+					}
 
 					hasRenderedPossMoves = false;
 					//break out of both loops
@@ -316,6 +337,53 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 					break;
 				}
 			}
+		}
+	}
+}
+
+void PromotionSelection(SDL_Renderer* Renderer, const SDL_Event& gameEvent, bool currentTurn)
+{
+	for (int mouseX = 2; mouseX < 6; mouseX++)
+	{
+		int xBlockStart = (WIDTH / 8) * mouseX;
+		int xBlockEnd = (WIDTH / 8) * (mouseX + 1);
+		int yBlockStart = (HEIGHT / 8) * 3;
+		int yBlockEnd = (HEIGHT / 8) * 4;
+
+		//if Moves havent been rendered yet then render them
+		if (gameEvent.button.x > xBlockStart && gameEvent.button.x <= xBlockEnd && gameEvent.button.y > yBlockStart && gameEvent.button.y <= yBlockEnd)
+		{
+			//piece must exist or something fishy
+			if (boardPosition[promotion])
+				delete boardPosition[promotion];
+
+			if (mouseX == 2)
+			{
+				boardPosition[promotion] = new Queen(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
+			}
+			else if (mouseX == 3)
+			{
+				boardPosition[promotion] = new Bishop(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
+			}
+			else if (mouseX == 4)
+			{
+				boardPosition[promotion] = new Knight(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
+			}
+			else if (mouseX == 5)
+			{
+				boardPosition[promotion] = new Rook(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
+
+			}
+
+			//Clear and Rerender stuff
+			SDL_RenderClear(Renderer);
+			Chess::DestroyAllPieceTextures();
+			Chess::DrawChessBoard(Renderer);
+			Chess::RenderAllPiece(Renderer);
+			SDL_RenderPresent(Renderer);
+
+			promotion = 99;
+			break;
 		}
 	}
 }
@@ -368,5 +436,97 @@ void Chess::DestroyAllPieceTextures()
 			SDL_FreeSurface(boardPosition[i]->GetPieceSurface());
 			boardPosition[i]->PossibleMovesVector().clear();
 		}
+	}
+}
+
+void Chess::AddGaussianBlur(SDL_Renderer* Renderer)
+{
+	// Create the surface to hold the blurred image
+	SDL_Surface* blurSurface = SDL_CreateRGBSurface(0, WIDTH, HEIGHT, 32, 0, 0, 0, 0);
+
+	// Lock the texture and copy its pixel data to the surface
+	SDL_Texture* texture = NULL; // Assume this is the texture we want to blur
+	SDL_LockTexture(texture, NULL, &blurSurface->pixels, &blurSurface->pitch);
+	SDL_RenderReadPixels(Renderer, NULL, blurSurface->format->format, blurSurface->pixels, blurSurface->pitch);
+	SDL_UnlockTexture(texture);
+
+	// Apply a blur to the surface
+	for (int i = 0; i < blurSurface->h; i++) {
+		// Apply one-dimensional blur to rows
+		applyBlurRow(blurSurface, i);
+	}
+
+	for (int i = 0; i < blurSurface->w; i++) {
+		// Apply one-dimensional blur to columns
+		applyBlurColumn(blurSurface, i);
+	}
+
+	// Create a new texture from the blurred surface
+	SDL_Texture* blurTexture = SDL_CreateTextureFromSurface(Renderer, blurSurface);
+
+	// Use the new texture to render the blur effect on screen
+	SDL_RenderCopy(Renderer, blurTexture, NULL, NULL);
+
+	// Free the surface
+	SDL_FreeSurface(blurSurface);
+	SDL_DestroyTexture(blurTexture);
+}
+
+void applyBlurRow(SDL_Surface* surface, int row)
+{
+	Uint32* pixels = (Uint32*)surface->pixels;
+	int width = surface->w;
+	int height = surface->h;
+
+	for (int x = 0; x < width; x++) {
+		double r = 0, g = 0, b = 0, a = 0;
+
+		for (int k = -KERNEL_SIZE / 2; k <= KERNEL_SIZE / 2; k++) {
+			int idx = x + k;
+			if (idx >= 0 && idx < width) {
+				Uint32 pixel = pixels[idx + row * width];
+				double weight = GAUSSIAN_KERNEL[k + KERNEL_SIZE / 2];
+
+				r += weight * ((pixel & surface->format->Rmask) >> surface->format->Rshift);
+				g += weight * ((pixel & surface->format->Gmask) >> surface->format->Gshift);
+				b += weight * ((pixel & surface->format->Bmask) >> surface->format->Bshift);
+				a += weight * ((pixel & surface->format->Amask) >> surface->format->Ashift);
+			}
+		}
+
+		Uint32 newPixel = ((Uint32)(a + 0.5f) << surface->format->Ashift) |
+			((Uint32)(r + 0.5f) << surface->format->Rshift) |
+			((Uint32)(g + 0.5f) << surface->format->Gshift) |
+			((Uint32)(b + 0.5f) << surface->format->Bshift);
+		pixels[x + row * width] = newPixel;
+	}
+}
+void applyBlurColumn(SDL_Surface* surface, int column)
+{
+	Uint32* pixels = (Uint32*)surface->pixels;
+	int width = surface->w;
+	int height = surface->h;
+
+	for (int y = 0; y < height; y++) {
+		double r = 0, g = 0, b = 0, a = 0;
+
+		for (int k = -KERNEL_SIZE / 2; k <= KERNEL_SIZE / 2; k++) {
+			int idx = y + k;
+			if (idx >= 0 && idx < height) {
+				Uint32 pixel = pixels[column + idx * width];
+				double weight = GAUSSIAN_KERNEL[k + KERNEL_SIZE / 2];
+
+				r += weight * ((pixel & surface->format->Rmask) >> surface->format->Rshift);
+				g += weight * ((pixel & surface->format->Gmask) >> surface->format->Gshift);
+				b += weight * ((pixel & surface->format->Bmask) >> surface->format->Bshift);
+				a += weight * ((pixel & surface->format->Amask) >> surface->format->Ashift);
+			}
+		}
+
+		Uint32 newPixel = ((Uint32)(a + 0.5f) << surface->format->Ashift) |
+			((Uint32)(r + 0.5f) << surface->format->Rshift) |
+			((Uint32)(g + 0.5f) << surface->format->Gshift) |
+			((Uint32)(b + 0.5f) << surface->format->Bshift);
+		pixels[column + y * width] = newPixel;
 	}
 }
