@@ -128,6 +128,7 @@ void Piece::RenderThePiece(SDL_Renderer* Renderer, const PieceType& pieceType, c
 	pieceRect.y = (int)(m_YPos * pieceRect.h);
 
 	SDL_RenderCopy(Renderer, m_pieceTexture, nullptr, &pieceRect);
+
 }
 
 void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& currentTurn)
@@ -184,6 +185,10 @@ void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& 
 	//Set Promotion here
 	Piece::SetPawnPromotion(Renderer, xEnd, yEnd);
 
+	//highlight the blocks moved
+	blocksMoved[0] = xStart + yStart * 8;
+	blocksMoved[1] = xEnd + yEnd * 8;
+	
 	//piece moved set to true
 	this->m_hasMoved = true;
 

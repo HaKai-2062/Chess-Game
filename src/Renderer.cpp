@@ -38,6 +38,7 @@ const double GAUSSIAN_KERNEL[KERNEL_SIZE] = { 0.0188, 0.0345, 0.0566, 0.0832, 0.
 Piece** boardPosition = new Piece* [64];
 int gameEnded = 0;
 int promotion = 99;
+int blocksMoved[2] = { 99, 99 };
 
 //must declare here or else it doesnt remember ehhhh
 Piece* pieceClicked = nullptr;
@@ -103,9 +104,13 @@ void Chess::MainRenderer()
 				SDL_RWops* tempRwops1 = SDL_RWFromMem((void*)game_start_png, sizeof(game_start_png));
 				SDL_Surface* tempSurface1 = IMG_Load_RW(tempRwops1, 1);
 				SDL_Texture* tempTexture1 = SDL_CreateTextureFromSurface(Renderer, tempSurface1);
+				promotion = 100;
+
 				SDL_RenderCopy(Renderer, tempTexture1, nullptr, &pieceRect);
 				SDL_RenderPresent(Renderer);
-				promotion = 100;
+				SDL_DestroyTexture(tempTexture1);
+				SDL_FreeRW(tempRwops1);
+				SDL_FreeSurface(tempSurface1);
 			}
 
 			if (gameEvent.type == SDL_MOUSEBUTTONDOWN && !gameEnded && promotion == 99)
@@ -203,6 +208,15 @@ float Chess::Lerp(const int& a, const int& b, const float& t)
 
 void Chess::RenderAllPiece(SDL_Renderer* Renderer)
 {
+	/*
+	if (blocksMoved[0] != 99 && blocksMoved[1] != 99)
+	{
+		Chess::HighlightBlockMoved(Renderer, blocksMoved[0], blocksMoved[1]);
+		blocksMoved[0] = 99;
+		blocksMoved[1] = 99;
+	}
+	*/
+
 	for (int j = 0; j < 8; j++)
 	{
 		for (int i = 0; i < 8; i++)
@@ -313,21 +327,33 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 							SDL_RWops* tempRwops1 = SDL_RWFromMem((void*)game_ended1_png, sizeof(game_ended1_png));
 							SDL_Surface* tempSurface1 = IMG_Load_RW(tempRwops1, 1);
 							SDL_Texture* tempTexture1 = SDL_CreateTextureFromSurface(Renderer, tempSurface1);
+							
 							SDL_RenderCopy(Renderer, tempTexture1, nullptr, &pieceRect);
+							SDL_DestroyTexture(tempTexture1);
+							SDL_FreeRW(tempRwops1);
+							SDL_FreeSurface(tempSurface1);
 						}
 						else if (gameEnded == 2)
 						{
 							SDL_RWops* tempRwops2 = SDL_RWFromMem((void*)game_ended2_png, sizeof(game_ended2_png));
 							SDL_Surface* tempSurface2 = IMG_Load_RW(tempRwops2, 1);
 							SDL_Texture* tempTexture2 = SDL_CreateTextureFromSurface(Renderer, tempSurface2);
+							
 							SDL_RenderCopy(Renderer, tempTexture2, nullptr, &pieceRect);
+							SDL_DestroyTexture(tempTexture2);
+							SDL_FreeRW(tempRwops2);
+							SDL_FreeSurface(tempSurface2);
 						}
 						else if (gameEnded == 3 || gameEnded == 4)
 						{
 							SDL_RWops* tempRwops3 = SDL_RWFromMem((void*)game_ended3_png, sizeof(game_ended3_png));
 							SDL_Surface* tempSurface3 = IMG_Load_RW(tempRwops3, 1);
 							SDL_Texture* tempTexture3 = SDL_CreateTextureFromSurface(Renderer, tempSurface3);
+							
 							SDL_RenderCopy(Renderer, tempTexture3, nullptr, &pieceRect);
+							SDL_DestroyTexture(tempTexture3);
+							SDL_FreeRW(tempRwops3);
+							SDL_FreeSurface(tempSurface3);
 						}
 						//button added for play button at ending here
 						if (gameEnded == 1 || gameEnded == 2 || gameEnded == 3 || gameEnded == 4)
@@ -341,9 +367,13 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 							SDL_RWops* tempRwops4 = SDL_RWFromMem((void*)game_start_png, sizeof(game_start_png));
 							SDL_Surface* tempSurface4 = IMG_Load_RW(tempRwops4, 1);
 							SDL_Texture* tempTexture4 = SDL_CreateTextureFromSurface(Renderer, tempSurface4);
-							SDL_RenderCopy(Renderer, tempTexture4, nullptr, &pieceRect);
 							//promotion 101 is set for resetting the game
 							promotion = 101;
+							
+							SDL_RenderCopy(Renderer, tempTexture4, nullptr, &pieceRect);
+							SDL_DestroyTexture(tempTexture4);
+							SDL_FreeRW(tempRwops4);
+							SDL_FreeSurface(tempSurface4);
 						}
 						SDL_RenderPresent(Renderer);
 					}
@@ -590,4 +620,27 @@ void applyBlurColumn(SDL_Surface* surface, int column)
 			((Uint32)(b + 0.5f) << surface->format->Bshift);
 		pixels[column + y * width] = newPixel;
 	}
+}
+
+//Highlight the background
+//TDL: implement this later on
+void Chess::HighlightBlockMoved(SDL_Renderer* Renderer, const int& start, const int& finish)
+{
+	SDL_Rect myRect{};
+	myRect.w = WIDTH / 8;
+	myRect.h = HEIGHT / 8;
+	myRect.x = Chess::GetBlockX(start) * myRect.w;
+	myRect.y = Chess::GetBlockY(start) * myRect.h;
+	SDL_SetRenderDrawColor(Renderer, 255, 255, 0, 128);
+	SDL_RenderFillRect(Renderer, &myRect);
+
+	SDL_Rect myRect2{};
+	myRect2.w = WIDTH / 8;
+	myRect2.h = HEIGHT / 8;
+	myRect2.x = Chess::GetBlockX(finish) * myRect2.w;
+	myRect2.y = Chess::GetBlockY(finish) * myRect2.h;
+	SDL_SetRenderDrawColor(Renderer, 255, 255, 0, 128);
+	SDL_RenderFillRect(Renderer, &myRect2);
+
+	SDL_RenderPresent(Renderer);
 }
