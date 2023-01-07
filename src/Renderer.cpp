@@ -27,7 +27,7 @@
 */
 
 void MouseButtonPressed(SDL_Renderer*, bool& hasRenderedPossMove, const SDL_Event&, bool&);
-void PromotionSelection(SDL_Renderer*, const SDL_Event&, bool);
+void ButtonSelection(SDL_Renderer*, const SDL_Event&, bool);
 void FreeAllHeapMemory();
 
 void applyBlurRow(SDL_Surface*, int);
@@ -91,21 +91,30 @@ void Chess::MainRenderer()
 				Chess::DrawChessBoard(Renderer);
 				initialRun = false;
 				Chess::Init(Renderer);
-				//Chess::AddGaussianBlur(Renderer);
+				Chess::AddGaussianBlur(Renderer);
 				
 				//Draw play button
+				SDL_Rect pieceRect{};
+				pieceRect.w = WIDTH / 4;
+				pieceRect.h = HEIGHT / 4;
+				pieceRect.y = (WIDTH / 8) * 5;
+				pieceRect.x = (HEIGHT / 8) * 3;
 
-
+				SDL_RWops* tempRwops1 = SDL_RWFromMem((void*)game_start_png, sizeof(game_start_png));
+				SDL_Surface* tempSurface1 = IMG_Load_RW(tempRwops1, 1);
+				SDL_Texture* tempTexture1 = SDL_CreateTextureFromSurface(Renderer, tempSurface1);
+				SDL_RenderCopy(Renderer, tempTexture1, nullptr, &pieceRect);
 				SDL_RenderPresent(Renderer);
+				promotion = 100;
 			}
 
 			if (gameEvent.type == SDL_MOUSEBUTTONDOWN && !gameEnded && promotion == 99)
 			{
 				MouseButtonPressed(Renderer, hasRenderedPossMoves, gameEvent, currentTurn);
 			}
-			else if (gameEvent.type == SDL_MOUSEBUTTONDOWN && !gameEnded && promotion != 99)
+			else if (gameEvent.type == SDL_MOUSEBUTTONDOWN && promotion != 99)
 			{
-				PromotionSelection(Renderer, gameEvent, currentTurn);
+				ButtonSelection(Renderer, gameEvent, currentTurn);
 			}
 		}
 		SDL_Delay(10);
@@ -123,111 +132,66 @@ void Chess::MainRenderer()
 void Chess::Init(SDL_Renderer* Renderer)
 {
 	//BLACK PAWN
-	Pawn* pawn1 = new Pawn(Renderer, false, 0, 1);
-	Pawn* pawn2 = new Pawn(Renderer, false, 1, 1);
-	Pawn* pawn3 = new Pawn(Renderer, false, 2, 1);
-	Pawn* pawn4 = new Pawn(Renderer, false, 3, 1);
-	Pawn* pawn5 = new Pawn(Renderer, false, 4, 1);
-	Pawn* pawn6 = new Pawn(Renderer, false, 5, 1);
-	Pawn* pawn7 = new Pawn(Renderer, false, 6, 1);
-	Pawn* pawn8 = new Pawn(Renderer, false, 7, 1);
+	boardPosition[0 + (1*8)] = new Pawn(Renderer, false, 0, 1);
+	boardPosition[1 + (1*8)] = new Pawn(Renderer, false, 1, 1);
+	boardPosition[2 + (1*8)] = new Pawn(Renderer, false, 2, 1);
+	boardPosition[3 + (1*8)] = new Pawn(Renderer, false, 3, 1);
+	boardPosition[4 + (1*8)] = new Pawn(Renderer, false, 4, 1);
+	boardPosition[5 + (1*8)] = new Pawn(Renderer, false, 5, 1);
+	boardPosition[6 + (1*8)] = new Pawn(Renderer, false, 6, 1);
+	boardPosition[7 + (1*8)] = new Pawn(Renderer, false, 7, 1);
 
 	//WHITE PAWN
-	Pawn* pawn9 = new Pawn(Renderer, true, 0, 6);
-	Pawn* pawn10 = new Pawn(Renderer, true, 1, 6);
-	Pawn* pawn11 = new Pawn(Renderer, true, 2, 6);
-	Pawn* pawn12 = new Pawn(Renderer, true, 3, 6);
-	Pawn* pawn13 = new Pawn(Renderer, true, 4, 6);
-	Pawn* pawn14 = new Pawn(Renderer, true, 5, 6);
-	Pawn* pawn15 = new Pawn(Renderer, true, 6, 6);
-	Pawn* pawn16 = new Pawn(Renderer, true, 7, 6);
+	boardPosition[0 + (6*8)] = new Pawn(Renderer, true, 0, 6);
+	boardPosition[1 + (6*8)] = new Pawn(Renderer, true, 1, 6);
+	boardPosition[2 + (6*8)] = new Pawn(Renderer, true, 2, 6);
+	boardPosition[3 + (6*8)] = new Pawn(Renderer, true, 3, 6);
+	boardPosition[4 + (6*8)] = new Pawn(Renderer, true, 4, 6);
+	boardPosition[5 + (6*8)] = new Pawn(Renderer, true, 5, 6);
+	boardPosition[6 + (6*8)] = new Pawn(Renderer, true, 6, 6);
+	boardPosition[7 + (6*8)] = new Pawn(Renderer, true, 7, 6);
 
 	//BLACK KNIGHT
-	Knight* knight1 = new Knight(Renderer, false, 1, 0);
-	Knight* knight2 = new Knight(Renderer, false, 6, 0);
+	boardPosition[1 + (0 * 8)] = new Knight(Renderer, false, 1, 0);
+	boardPosition[6 + (0 * 8)] = new Knight(Renderer, false, 6, 0);
 
 	//WHITE KNIGHT		  
-	Knight* knight3 = new Knight(Renderer, true, 1, 7);
-	Knight* knight4 = new Knight(Renderer, true, 6, 7);
+	boardPosition[1 + (7 * 8)] = new Knight(Renderer, true, 1, 7);
+	boardPosition[6 + (7 * 8)] = new Knight(Renderer, true, 6, 7);
 
 	//BLACK BISHOP
-	Bishop* bishop1 = new Bishop(Renderer, false, 2, 0);
-	Bishop* bishop2 = new Bishop(Renderer, false, 5, 0);
+	boardPosition[2 + (0*8)] = new Bishop(Renderer, false, 2, 0);
+	boardPosition[5 + (0*8)] = new Bishop(Renderer, false, 5, 0);
 
 	//WHITE BISHOP
-	Bishop* bishop3 = new Bishop(Renderer, true, 2, 7);
-	Bishop* bishop4 = new Bishop(Renderer, true, 5, 7);
+	boardPosition[2 + (7*8)] = new Bishop(Renderer, true, 2, 7);
+	boardPosition[5 + (7*8)] = new Bishop(Renderer, true, 5, 7);
 
 	//BLACK ROOK
-	Rook* rook1 = new Rook(Renderer, false, 0, 0);
-	Rook* rook2 = new Rook(Renderer, false, 7, 0);
+	boardPosition[0 + (0*8)] = new Rook(Renderer, false, 0, 0);
+	boardPosition[7 + (0*8)] = new Rook(Renderer, false, 7, 0);
 
 	//WHITE ROOK
-	Rook* rook3 = new Rook(Renderer, true, 0, 7);
-	Rook* rook4 = new Rook(Renderer, true, 7, 7);
+	boardPosition[0 + (7*8)] = new Rook(Renderer, true, 0, 7);
+	boardPosition[7 + (7*8)] = new Rook(Renderer, true, 7, 7);
 
 	//BLACK QUEEN
-	Queen* queen1 = new Queen(Renderer, false, 3, 0);
+	boardPosition[3 + (0 * 8)] = new Queen(Renderer, false, 3, 0);
 
 	//WHITE QUEEN
-	Queen* queen2 = new Queen(Renderer, true, 3, 7);
+	boardPosition[3 + (7 * 8)] = new Queen(Renderer, true, 3, 7);
 
 	//BLACK KING 
-	King* king1 = new King(Renderer, false, 4,0);
+	boardPosition[4 + (0 * 8)] = new King(Renderer, false, 4,0);
 
 	//WHITE KING
-	King* king2 = new King(Renderer, true, 4,7);
+	boardPosition[4 + (7 * 8)] = new King(Renderer, true, 4,7);
 
 	//set 16-47 to nullptr
-	for (int i = 0; i < 64; i++)
+	for (int i = 16; i < 48; i++)
 	{
 		boardPosition[i] = nullptr;
 	}
-
-	//------------X + (Y*W)------------//
-	boardPosition[0 + (1*8)] = pawn1;
-	boardPosition[1 + (1*8)] = pawn2;
-	boardPosition[2 + (1*8)] = pawn3;
-	boardPosition[3 + (1*8)] = pawn4;
-	boardPosition[4 + (1*8)] = pawn5;
-	boardPosition[5 + (1*8)] = pawn6;
-	boardPosition[6 + (1*8)] = pawn7;
-	boardPosition[7 + (1*8)] = pawn8;
-	
-	boardPosition[0 + (6*8)] = pawn9;
-	boardPosition[1 + (6*8)] = pawn10;
-	boardPosition[2 + (6*8)] = pawn11;
-	boardPosition[3 + (6*8)] = pawn12;
-	boardPosition[4 + (6*8)] = pawn13;
-	boardPosition[5 + (6*8)] = pawn14;
-	boardPosition[6 + (6*8)] = pawn15;
-	boardPosition[7 + (6*8)] = pawn16;
-
-	boardPosition[1 + (0*8)] = knight1;
-	boardPosition[6 + (0*8)] = knight2;
-
-	boardPosition[1 + (7*8)] = knight3;
-	boardPosition[6 + (7*8)] = knight4;
-
-	boardPosition[2 + (0*8)] = bishop1;
-	boardPosition[5 + (0*8)] = bishop2;
-
-	boardPosition[2 + (7*8)] = bishop3;
-	boardPosition[5 + (7*8)] = bishop4;
-
-	boardPosition[0 + (0*8)] = rook1;
-	boardPosition[7 + (0*8)] = rook2;
-
-	boardPosition[0 + (7*8)] = rook3;
-	boardPosition[7 + (7*8)] = rook4;
-
-	boardPosition[3 + (0*8)] = queen1;
-
-	boardPosition[3 + (7*8)] = queen2;
-
-	boardPosition[4 + (0*8)] = king1;
-
-	boardPosition[4 + (7*8)] = king2;
 }
 
 // Linearly interpolates between two values a and b by the interpolant t.
@@ -333,7 +297,7 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 						Chess::RenderAllPiece(Renderer);
 						SDL_RenderPresent(Renderer);
 					}
-					//only for endscreen, promotion blur is set inside pawn.cpp
+					//end screen set here and not promotion
 					else if (promotion == 99)
 					{
 						Chess::AddGaussianBlur(Renderer);
@@ -341,7 +305,7 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 						SDL_Rect pieceRect{};
 						pieceRect.w = WIDTH / 2;
 						pieceRect.h = HEIGHT / 2;
-						pieceRect.y = pieceRect.h/2;
+						pieceRect.y = pieceRect.h/4;
 						pieceRect.x = pieceRect.w/2;
 
 						if (gameEnded == 1)
@@ -365,7 +329,22 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 							SDL_Texture* tempTexture3 = SDL_CreateTextureFromSurface(Renderer, tempSurface3);
 							SDL_RenderCopy(Renderer, tempTexture3, nullptr, &pieceRect);
 						}
-						//Add play button here
+						//button added for play button at ending here
+						if (gameEnded == 1 || gameEnded == 2 || gameEnded == 3 || gameEnded == 4)
+						{
+							SDL_Rect pieceRect{};
+							pieceRect.w = WIDTH / 4;
+							pieceRect.h = HEIGHT / 4;
+							pieceRect.y = (WIDTH / 8) * 5;
+							pieceRect.x = (HEIGHT / 8) * 3;
+
+							SDL_RWops* tempRwops4 = SDL_RWFromMem((void*)game_start_png, sizeof(game_start_png));
+							SDL_Surface* tempSurface4 = IMG_Load_RW(tempRwops4, 1);
+							SDL_Texture* tempTexture4 = SDL_CreateTextureFromSurface(Renderer, tempSurface4);
+							SDL_RenderCopy(Renderer, tempTexture4, nullptr, &pieceRect);
+							//promotion 101 is set for resetting the game
+							promotion = 101;
+						}
 						SDL_RenderPresent(Renderer);
 					}
 
@@ -379,51 +358,91 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 	}
 }
 
-void PromotionSelection(SDL_Renderer* Renderer, const SDL_Event& gameEvent, bool currentTurn)
+void ButtonSelection(SDL_Renderer* Renderer, const SDL_Event& gameEvent, bool currentTurn)
 {
-	for (int mouseX = 2; mouseX < 6; mouseX++)
+	int xBlockStart;
+	int xBlockEnd;
+	int yBlockStart;
+	int yBlockEnd;
+	if (promotion != 100 && promotion != 101)
 	{
-		int xBlockStart = (WIDTH / 8) * mouseX;
-		int xBlockEnd = (WIDTH / 8) * (mouseX + 1);
-		int yBlockStart = (HEIGHT / 8) * 3;
-		int yBlockEnd = (HEIGHT / 8) * 4;
-
-		//if Moves havent been rendered yet then render them
-		if (gameEvent.button.x > xBlockStart && gameEvent.button.x <= xBlockEnd && gameEvent.button.y > yBlockStart && gameEvent.button.y <= yBlockEnd)
+		for (int mouseX = 2; mouseX < 6; mouseX++)
 		{
-			//piece must exist or something fishy
-			if (boardPosition[promotion])
-				delete boardPosition[promotion];
+			xBlockStart = (WIDTH / 8) * mouseX;
+			xBlockEnd = (WIDTH / 8) * (mouseX + 1);
+			yBlockStart = (HEIGHT / 8) * 3;
+			yBlockEnd = (HEIGHT / 8) * 4;
 
-			if (mouseX == 2)
+			//if Moves havent been rendered yet then render them, promotion to 100 means start screen
+			if (gameEvent.button.x > xBlockStart && gameEvent.button.x <= xBlockEnd && gameEvent.button.y > yBlockStart && gameEvent.button.y <= yBlockEnd)
 			{
-				boardPosition[promotion] = new Queen(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
-			}
-			else if (mouseX == 3)
-			{
-				boardPosition[promotion] = new Bishop(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
-			}
-			else if (mouseX == 4)
-			{
-				boardPosition[promotion] = new Knight(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
-			}
-			else if (mouseX == 5)
-			{
-				boardPosition[promotion] = new Rook(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
+				//piece must exist or something fishy
+				if (boardPosition[promotion])
+					delete boardPosition[promotion];
 
-			}
+				if (mouseX == 2)
+				{
+					boardPosition[promotion] = new Queen(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
+				}
+				else if (mouseX == 3)
+				{
+					boardPosition[promotion] = new Bishop(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
+				}
+				else if (mouseX == 4)
+				{
+					boardPosition[promotion] = new Knight(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
+				}
+				else if (mouseX == 5)
+				{
+					boardPosition[promotion] = new Rook(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
 
+				}
+
+				//Clear and Rerender stuff
+				SDL_RenderClear(Renderer);
+				Chess::DestroyAllPieceTextures();
+				Chess::DrawChessBoard(Renderer);
+				Chess::RenderAllPiece(Renderer);
+				SDL_RenderPresent(Renderer);
+				promotion = 99;
+				break;
+			}
+		}
+	}
+
+	//this is the start screen
+	if (promotion == 100 || promotion == 101)
+	{
+		xBlockStart = (WIDTH / 8) * 3;
+		xBlockEnd = (WIDTH / 8) * 5;
+		yBlockStart = (HEIGHT / 8) * 5;
+		yBlockEnd = (HEIGHT / 8) * 7;
+
+
+		if (promotion == 100 && gameEvent.button.x > xBlockStart && gameEvent.button.x <= xBlockEnd && gameEvent.button.y > yBlockStart && gameEvent.button.y <= yBlockEnd)
+		{
 			//Clear and Rerender stuff
 			SDL_RenderClear(Renderer);
 			Chess::DestroyAllPieceTextures();
 			Chess::DrawChessBoard(Renderer);
 			Chess::RenderAllPiece(Renderer);
 			SDL_RenderPresent(Renderer);
-
 			promotion = 99;
-			break;
+		}
+		else if (promotion == 101 && gameEvent.button.x > xBlockStart && gameEvent.button.x <= xBlockEnd && gameEvent.button.y > yBlockStart && gameEvent.button.y <= yBlockEnd)
+		{
+			//Clear and Rerender stuff
+			SDL_RenderClear(Renderer);
+			FreeAllHeapMemory();
+			Chess::DrawChessBoard(Renderer);
+			Chess::Init(Renderer);
+			SDL_RenderPresent(Renderer);
+			//restart the game
+			gameEnded = 0;
+			promotion = 99;
 		}
 	}
+
 }
 
 void FreeAllHeapMemory()
@@ -432,9 +451,13 @@ void FreeAllHeapMemory()
 	{
 		//piece object deleted
 		if (boardPosition[i])
+		{
 			delete boardPosition[i];
+			boardPosition[i] = nullptr;
+		}
 	}
-	delete[] boardPosition;
+	//dont delete this incase i want to restart the game
+	//delete[] boardPosition;
 }
 
 void Chess::MissingTexture(bool gameQuit, std::string filename)

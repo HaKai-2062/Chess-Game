@@ -33,7 +33,7 @@ namespace Chess
 
 static const int WIDTH = 800;
 static const int HEIGHT = 800;
-//0 = game running, 1 = white checkmated black, 2 = black checkmated white, 3 = stalemate, 4 = deaposition
+//0 = game running, 1 = white checkmated black, 2 = black checkmated white, 3 = stalemate, 4 = deaposition, 5 = game start
 extern int gameEnded;
 extern int promotion;
 
