@@ -4,7 +4,7 @@
 
 # Introduction
 
-This repository contains a beta version of a chess game with basic functionalities like enPassant and castling. It uses [SDL2](https://github.com/libsdl-org/SDL) and [SDL2_image](https://github.com/libsdl-org/SDL_image) for drawing and rendering the textures.
+This repository contains an initial version of a chess game with basic functionalities like checkmate, stalemate, enPassant and castling. It uses [SDL2](https://github.com/libsdl-org/SDL) and [SDL2_image](https://github.com/libsdl-org/SDL_image) for drawing and rendering the textures.
 
 # Softwares used
 ## Visual Studio
