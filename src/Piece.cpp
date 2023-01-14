@@ -195,7 +195,7 @@ void Piece::RenderPossMovesBlock(SDL_Renderer* Renderer)
 			SDL_SetRenderDrawColor(Renderer, 115, 0, 247, 150);
 		}
 		//set castling piece color here
-		else if (this->GetPieceType() == KING && !boardPosition[PossibleMovesVector()[i]] && (PossibleMovesVector()[i] == Piece::castleBlockWhite[0] || PossibleMovesVector()[i] == Piece::castleBlockWhite[1] || PossibleMovesVector()[i] == Piece::castleBlockBlack[0] || PossibleMovesVector()[i] == Piece::castleBlockBlack[1]))
+		else if (GetPieceType() == KING && !boardPosition[PossibleMovesVector()[i]] && (PossibleMovesVector()[i] == Piece::castleBlockWhite[0] || PossibleMovesVector()[i] == Piece::castleBlockWhite[1] || PossibleMovesVector()[i] == Piece::castleBlockBlack[0] || PossibleMovesVector()[i] == Piece::castleBlockBlack[1]))
 		{
 			SDL_SetRenderDrawColor(Renderer, 115, 0, 247, 150);
 		}
@@ -214,9 +214,9 @@ void Piece::SetKingVariables()
 
 	//if "this" is king then save position
 	if (GetPieceTeam() && GetPieceType() == KING)
-		Piece::whiteKingPos = static_cast<int>(m_XPos) + static_cast<int>(m_XPos * 8);
+		Piece::whiteKingPos = static_cast<int>(m_XPos) + static_cast<int>(m_YPos * 8);
 	else if (!GetPieceTeam() && GetPieceType() == KING)
-		Piece::blackKingPos = static_cast<int>(m_YPos) + static_cast<int>(m_YPos * 8);
+		Piece::blackKingPos = static_cast<int>(m_XPos) + static_cast<int>(m_YPos * 8);
 
 	//save the vars as false after a move has been performed
 	if (GetPieceTeam())
@@ -330,25 +330,25 @@ bool Piece::EndGameReached()
 		}
 	}
 	
-	if (this->GetPieceTeam() && tempVar1 == tempVar2)
+	if (GetPieceTeam() && tempVar1 == tempVar2)
 	{
 		std::cout << "White Checkmated Black" << std::endl;
 		gameEnded = 1;
 		return true;
 	}
-	else if (!this->GetPieceTeam() && tempVar1 == tempVar2)
+	else if (!GetPieceTeam() && tempVar1 == tempVar2)
 	{
 		std::cout << "Black Checkmated White" << std::endl;
 		gameEnded = 2;
 		return true;
 	}
-	else if (this->GetPieceTeam() && staleMateWhite)
+	else if (GetPieceTeam() && staleMateWhite)
 	{
 		std::cout << "Stalemate reached for Black" << std::endl;
 		gameEnded = 3;
 		return true;
 	}
-	else if (!this->GetPieceTeam() && staleMateBlack)
+	else if (!GetPieceTeam() && staleMateBlack)
 	{
 		std::cout << "Stalemate reached for White" << std::endl;
 		gameEnded = 3;
@@ -428,7 +428,6 @@ bool Piece::IsLegitMove(const int& pieceMove)
 	boardPosition[pieceMove] = boardPosition[x + (y * 8)];
 	boardPosition[x + (y * 8)] = nullptr;
 
-	//rn it sacrifices but not stops itself form moving away ig?
 	enemyPieceMoves.clear();
 	for (int i = 0; i < 64; i++)
 	{
@@ -438,7 +437,7 @@ bool Piece::IsLegitMove(const int& pieceMove)
 			enemyPieceMoves = boardPosition[i]->CalculatePossibleMoves();
 			for (int j = 0; j < enemyPieceMoves.size(); j++)
 			{
-				if (GetPieceType() != KING && ((GetPieceTeam() && enemyPieceMoves[j] == Piece::whiteKingPos) || (!this->GetPieceTeam() && enemyPieceMoves[j] == Piece::blackKingPos)))
+				if (GetPieceType() != KING && ((GetPieceTeam() && enemyPieceMoves[j] == Piece::whiteKingPos) || (!GetPieceTeam() && enemyPieceMoves[j] == Piece::blackKingPos)))
 				{
 					legalMove = false;
 					i = 64;

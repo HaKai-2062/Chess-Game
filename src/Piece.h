@@ -7,16 +7,13 @@ enum PieceType { PAWN = 0, KNIGHT = 1, BISHOP = 2, ROOK = 3, QUEEN = 4, KING = 5
 class Piece
 {
 public:
-	PieceType GetPieceType() { return this->m_pieceType; }
-	bool HasPieceMoved() { return this->m_hasMoved; }
-	bool GetPieceTeam() { return this->m_pieceTeam; }
-	float GetPieceX() { return this->m_XPos; }
-	float GetPieceY() { return this->m_YPos; }
-	void AddToX(const float& x) { this->m_XPos = this->m_XPos + x; }
-	void AddToY(const float& y) { this->m_YPos = this->m_YPos + y; }
+	PieceType GetPieceType() { return m_pieceType; }
+	bool HasPieceMoved() { return m_hasMoved; }
+	bool GetPieceTeam() { return m_pieceTeam; }
+	float GetPieceX() { return m_XPos; }
+	float GetPieceY() { return m_YPos; }
 
-	SDL_Texture* GetPieceTexture() { return this->m_pieceTexture; }
-	std::vector<int>& PossibleMovesVector() { return this->m_possMoves; }
+	std::vector<int>& PossibleMovesVector() { return m_possMoves; }
 	
 	void RenderThePiece(SDL_Renderer*, const PieceType&, const bool&, const float&, const float&);
 	void RenderPossMovesBlock(SDL_Renderer*);

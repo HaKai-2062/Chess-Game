@@ -14,7 +14,7 @@ King::~King()
 void King::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
 	CalculateLegitMoves();
-	King::PushCastlingMove(this->PossibleMovesVector());
+	King::PushCastlingMove(PossibleMovesVector());
 	RenderPossMovesBlock(Renderer);
 }
 

@@ -145,12 +145,16 @@ void Chess::MainRenderer()
 			
 			if (initialRun)
 			{
+				//make textures here
+				CreatePieceTextures(Renderer);
+
 				SDL_RenderClear(Renderer);
 				Chess::DrawChessBoard(Renderer);
-				initialRun = false;
 				Chess::Init(Renderer);
 				Chess::AddGaussianBlur(Renderer);
 				
+				initialRun = false;
+
 				//Draw play button
 				SDL_Rect pieceRect{};
 				pieceRect.w = WIDTH / 4;
@@ -184,12 +188,13 @@ void Chess::MainRenderer()
 
 	//Freeing resources
 	DeletePieces();
+	delete[] boardPosition;
+
 	SDL_FreeRW(iconRW);
 	SDL_FreeSurface(iconSurface);
 	SDL_DestroyRenderer(Renderer);
 	SDL_DestroyWindow(Window);
 
-	delete[] boardPosition;
 	SDL_DestroyTexture(pieceTexture1);
 	SDL_DestroyTexture(pieceTexture2);
 	SDL_DestroyTexture(pieceTexture3);
@@ -235,9 +240,6 @@ void Chess::MainRenderer()
 
 void Chess::Init(SDL_Renderer* Renderer)
 {
-	//make textures here
-	CreatePieceTextures(Renderer);
-
 	//BLACK PAWN
 	boardPosition[0 + (1*8)] = new Pawn(Renderer, false, 0, 1);
 	boardPosition[1 + (1*8)] = new Pawn(Renderer, false, 1, 1);
