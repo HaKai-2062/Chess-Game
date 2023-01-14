@@ -8,27 +8,24 @@ Pawn::Pawn(SDL_Renderer* m_Renderer, bool m_pieceTeam, float m_XPos, float m_YPo
 
 Pawn::~Pawn()
 {
-	SDL_DestroyTexture(this->GetPieceTexture());
-	SDL_FreeRW(this->GetPieceRW());
-	SDL_FreeSurface(this->GetPieceSurface());
-	this->PossibleMovesVector().clear();
+	PossibleMovesVector().clear();
 }
 
 void Pawn::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
-	this->CalculateLegitMoves();
-	this->RenderPossMovesBlock(Renderer);
+	CalculateLegitMoves();
+	RenderPossMovesBlock(Renderer);
 }
 
 std::vector<int> Pawn::CalculatePossibleMoves()
 {
-	int x = static_cast<int>(this->GetPieceX());
-	int y = static_cast<int>(this->GetPieceY());
+	int x = static_cast<int>(m_XPos);
+	int y = static_cast<int>(m_YPos);
 	std::vector<int> possibleMoves;
 
 	possibleMoves.clear();
 	//Render Black Pawn Moves
-	if (!this->GetPieceTeam())
+	if (!GetPieceTeam())
 	{
 		//if next block is empty
 		if ((y + 1) < 8 && !boardPosition[x + ((y + 1) * 8)])
@@ -36,7 +33,7 @@ std::vector<int> Pawn::CalculatePossibleMoves()
 			possibleMoves.push_back(x + (y + 1) * 8);
 		}
 		//2 blocks below are checked if empty or not and piece shouldnt have moved
-		if ((y + 2) < 8 && !boardPosition[x + ((y + 1) * 8)] && !boardPosition[x + ((y + 2) * 8)] && !(this->HasPieceMoved()))
+		if ((y + 2) < 8 && !boardPosition[x + ((y + 1) * 8)] && !boardPosition[x + ((y + 2) * 8)] && !HasPieceMoved())
 		{
 			possibleMoves.push_back(x + (y + 2) * 8);
 
@@ -64,7 +61,7 @@ std::vector<int> Pawn::CalculatePossibleMoves()
 	}
 
 	//Render White Pawn Moves
-	else if (this->GetPieceTeam())
+	else if (GetPieceTeam())
 	{
 		//only the next block seems empty
 		if ((y - 1) > -1 && !boardPosition[x + ((y - 1) * 8)])
@@ -72,7 +69,7 @@ std::vector<int> Pawn::CalculatePossibleMoves()
 			possibleMoves.push_back(x + (y - 1) * 8);
 		}
 		//2 blocks above are checked if empty or not
-		if ((y - 2) > -1 && !boardPosition[x + ((y - 1) * 8)] && !boardPosition[x + ((y - 2) * 8)] && !(this->HasPieceMoved()))
+		if ((y - 2) > -1 && !boardPosition[x + ((y - 1) * 8)] && !boardPosition[x + ((y - 2) * 8)] && !HasPieceMoved())
 		{
 			possibleMoves.push_back(x + (y - 2) * 8);
 		}

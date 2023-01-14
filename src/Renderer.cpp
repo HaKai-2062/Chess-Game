@@ -1,4 +1,6 @@
 #include "Renderer.h"
+#include <chrono>
+#include <thread>
 
 #include "C_Files/icon.c"
 
@@ -15,6 +17,20 @@
 #include "C_Files/game_ended3.c"
 #include "C_Files/game_start.c"
 
+#include "C_Files/bishop.c"
+#include "C_Files/king.c"
+#include "C_Files/knight.c"
+#include "C_Files/pawn.c"
+#include "C_Files/queen.c"
+#include "C_Files/rook.c"
+
+#include "C_Files/bishop_bl.c"
+#include "C_Files/king_bl.c"
+#include "C_Files/knight_bl.c"
+#include "C_Files/pawn_bl.c"
+#include "C_Files/queen_bl.c"
+#include "C_Files/rook_bl.c"
+
 /*
 |-|-|-|-|-|-|-|-|
 |-|-|-|-|-|-|-|-|
@@ -28,7 +44,8 @@
 
 void MouseButtonPressed(SDL_Renderer*, bool& hasRenderedPossMove, const SDL_Event&, bool&);
 void ButtonSelection(SDL_Renderer*, const SDL_Event&, bool);
-void FreeAllHeapMemory();
+void CreatePieceTextures(SDL_Renderer*);
+void DeletePieces();
 
 void applyBlurRow(SDL_Surface*, int);
 void applyBlurColumn(SDL_Surface*, int);
@@ -42,6 +59,46 @@ int blocksMoved[2] = { 99, 99 };
 
 //must declare here or else it doesnt remember ehhhh
 Piece* pieceClicked = nullptr;
+
+//declare stuff here
+static SDL_RWops* pieceRW1 = nullptr;
+static SDL_RWops* pieceRW2 = nullptr;
+static SDL_RWops* pieceRW3 = nullptr;
+static SDL_RWops* pieceRW4 = nullptr;
+static SDL_RWops* pieceRW5 = nullptr;
+static SDL_RWops* pieceRW6 = nullptr;
+static SDL_RWops* pieceRW7 = nullptr;
+static SDL_RWops* pieceRW8 = nullptr;
+static SDL_RWops* pieceRW9 = nullptr;
+static SDL_RWops* pieceRW10 = nullptr;
+static SDL_RWops* pieceRW11 = nullptr;
+static SDL_RWops* pieceRW12 = nullptr;
+
+static SDL_Surface* pieceSurface1 = nullptr;
+static SDL_Surface* pieceSurface2 = nullptr;
+static SDL_Surface* pieceSurface3 = nullptr;
+static SDL_Surface* pieceSurface4 = nullptr;
+static SDL_Surface* pieceSurface5 = nullptr;
+static SDL_Surface* pieceSurface6 = nullptr;
+static SDL_Surface* pieceSurface7 = nullptr;
+static SDL_Surface* pieceSurface8 = nullptr;
+static SDL_Surface* pieceSurface9 = nullptr;
+static SDL_Surface* pieceSurface10 = nullptr;
+static SDL_Surface* pieceSurface11 = nullptr;
+static SDL_Surface* pieceSurface12 = nullptr;
+
+static SDL_Texture* pieceTexture1 = nullptr;
+static SDL_Texture* pieceTexture2 = nullptr;
+static SDL_Texture* pieceTexture3 = nullptr;
+static SDL_Texture* pieceTexture4 = nullptr;
+static SDL_Texture* pieceTexture5 = nullptr;
+static SDL_Texture* pieceTexture6 = nullptr;
+static SDL_Texture* pieceTexture7 = nullptr;
+static SDL_Texture* pieceTexture8 = nullptr;
+static SDL_Texture* pieceTexture9 = nullptr;
+static SDL_Texture* pieceTexture10 = nullptr;
+static SDL_Texture* pieceTexture11 = nullptr;
+static SDL_Texture* pieceTexture12 = nullptr;
 
 void Chess::MainRenderer()
 {
@@ -122,20 +179,65 @@ void Chess::MainRenderer()
 				ButtonSelection(Renderer, gameEvent, currentTurn);
 			}
 		}
-		SDL_Delay(10);
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 
 	//Freeing resources
-	FreeAllHeapMemory();
+	DeletePieces();
 	SDL_FreeRW(iconRW);
 	SDL_FreeSurface(iconSurface);
 	SDL_DestroyRenderer(Renderer);
 	SDL_DestroyWindow(Window);
+
+	delete[] boardPosition;
+	SDL_DestroyTexture(pieceTexture1);
+	SDL_DestroyTexture(pieceTexture2);
+	SDL_DestroyTexture(pieceTexture3);
+	SDL_DestroyTexture(pieceTexture4);
+	SDL_DestroyTexture(pieceTexture5);
+	SDL_DestroyTexture(pieceTexture6);
+	SDL_DestroyTexture(pieceTexture7);
+	SDL_DestroyTexture(pieceTexture8);
+	SDL_DestroyTexture(pieceTexture9);
+	SDL_DestroyTexture(pieceTexture10);
+	SDL_DestroyTexture(pieceTexture11);
+	SDL_DestroyTexture(pieceTexture12);
+
+	SDL_FreeSurface(pieceSurface1);
+	SDL_FreeSurface(pieceSurface2);
+	SDL_FreeSurface(pieceSurface3);
+	SDL_FreeSurface(pieceSurface4);
+	SDL_FreeSurface(pieceSurface5);
+	SDL_FreeSurface(pieceSurface6);
+	SDL_FreeSurface(pieceSurface7);
+	SDL_FreeSurface(pieceSurface8);
+	SDL_FreeSurface(pieceSurface9);
+	SDL_FreeSurface(pieceSurface10);
+	SDL_FreeSurface(pieceSurface11);
+	SDL_FreeSurface(pieceSurface12);
+
+	//clearing the rw is really slow
+	SDL_FreeRW(pieceRW1);
+	SDL_FreeRW(pieceRW2);
+	SDL_FreeRW(pieceRW3);
+	SDL_FreeRW(pieceRW4);
+	SDL_FreeRW(pieceRW5);
+	SDL_FreeRW(pieceRW6);
+	SDL_FreeRW(pieceRW7);
+	SDL_FreeRW(pieceRW8);
+	SDL_FreeRW(pieceRW9);
+	SDL_FreeRW(pieceRW10);
+	SDL_FreeRW(pieceRW11);
+	SDL_FreeRW(pieceRW12);
+
 	SDL_Quit();
 }
 
 void Chess::Init(SDL_Renderer* Renderer)
 {
+	//make textures here
+	CreatePieceTextures(Renderer);
+
 	//BLACK PAWN
 	boardPosition[0 + (1*8)] = new Pawn(Renderer, false, 0, 1);
 	boardPosition[1 + (1*8)] = new Pawn(Renderer, false, 1, 1);
@@ -205,7 +307,6 @@ float Chess::Lerp(const int& a, const int& b, const float& t)
 	return a + ((b - a) * t);
 }
 
-
 void Chess::RenderAllPiece(SDL_Renderer* Renderer)
 {
 	/*
@@ -262,7 +363,6 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 					if (hasRenderedPossMoves)
 					{
 						SDL_RenderClear(Renderer);
-						Chess::DestroyAllPieceTextures();
 						Chess::DrawChessBoard(Renderer);
 						Chess::RenderAllPiece(Renderer);
 
@@ -295,6 +395,8 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 							{
 								pieceClicked->MoveThePiece(Renderer, (x + (y * 8)), currentTurn);
 								//no need to loop anymore
+								y = 8;
+								x = 8;
 								break;
 							}
 						}
@@ -306,7 +408,6 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 					{
 						//Clear and Rerender pieces if they had any renderedPossMoves before
 						SDL_RenderClear(Renderer);
-						Chess::DestroyAllPieceTextures();
 						Chess::DrawChessBoard(Renderer);
 						Chess::RenderAllPiece(Renderer);
 						SDL_RenderPresent(Renderer);
@@ -430,7 +531,6 @@ void ButtonSelection(SDL_Renderer* Renderer, const SDL_Event& gameEvent, bool cu
 
 				//Clear and Rerender stuff
 				SDL_RenderClear(Renderer);
-				Chess::DestroyAllPieceTextures();
 				Chess::DrawChessBoard(Renderer);
 				Chess::RenderAllPiece(Renderer);
 				SDL_RenderPresent(Renderer);
@@ -453,7 +553,6 @@ void ButtonSelection(SDL_Renderer* Renderer, const SDL_Event& gameEvent, bool cu
 		{
 			//Clear and Rerender stuff
 			SDL_RenderClear(Renderer);
-			Chess::DestroyAllPieceTextures();
 			Chess::DrawChessBoard(Renderer);
 			Chess::RenderAllPiece(Renderer);
 			SDL_RenderPresent(Renderer);
@@ -463,7 +562,7 @@ void ButtonSelection(SDL_Renderer* Renderer, const SDL_Event& gameEvent, bool cu
 		{
 			//Clear and Rerender stuff
 			SDL_RenderClear(Renderer);
-			FreeAllHeapMemory();
+			DeletePieces();
 			Chess::DrawChessBoard(Renderer);
 			Chess::Init(Renderer);
 			SDL_RenderPresent(Renderer);
@@ -475,7 +574,108 @@ void ButtonSelection(SDL_Renderer* Renderer, const SDL_Event& gameEvent, bool cu
 
 }
 
-void FreeAllHeapMemory()
+void CreatePieceTextures(SDL_Renderer* Renderer)
+{
+	pieceRW1 = SDL_RWFromMem((void*)pawn_bl_png, sizeof(pawn_bl_png));
+	pieceRW2 = SDL_RWFromMem((void*)pawn_png, sizeof(pawn_png));
+	pieceRW3 = SDL_RWFromMem((void*)knight_bl_png, sizeof(knight_bl_png));
+	pieceRW4 = SDL_RWFromMem((void*)knight_png, sizeof(knight_png));
+	pieceRW5 = SDL_RWFromMem((void*)bishop_bl_png, sizeof(bishop_bl_png));
+	pieceRW6 = SDL_RWFromMem((void*)bishop_png, sizeof(bishop_png));
+	pieceRW7 = SDL_RWFromMem((void*)rook_bl_png, sizeof(rook_bl_png));
+	pieceRW8 = SDL_RWFromMem((void*)rook_png, sizeof(rook_png));
+	pieceRW9 = SDL_RWFromMem((void*)queen_bl_png, sizeof(queen_bl_png));
+	pieceRW10 = SDL_RWFromMem((void*)queen_png, sizeof(queen_png));
+	pieceRW11 = SDL_RWFromMem((void*)king_bl_png, sizeof(king_bl_png));
+	pieceRW12 = SDL_RWFromMem((void*)king_png, sizeof(king_png));
+
+	pieceSurface1  = IMG_Load_RW(pieceRW1, 1);
+	pieceSurface2  = IMG_Load_RW(pieceRW2, 1);
+	pieceSurface3  = IMG_Load_RW(pieceRW3, 1);
+	pieceSurface4  = IMG_Load_RW(pieceRW4, 1);
+	pieceSurface5  = IMG_Load_RW(pieceRW5, 1);
+	pieceSurface6  = IMG_Load_RW(pieceRW6, 1);
+	pieceSurface7  = IMG_Load_RW(pieceRW7, 1);
+	pieceSurface8  = IMG_Load_RW(pieceRW8, 1);
+	pieceSurface9  = IMG_Load_RW(pieceRW9, 1);
+	pieceSurface10 = IMG_Load_RW(pieceRW10, 1);
+	pieceSurface11 = IMG_Load_RW(pieceRW11, 1);
+	pieceSurface12 = IMG_Load_RW(pieceRW12, 1);
+
+	pieceTexture1 = SDL_CreateTextureFromSurface(Renderer, pieceSurface1);
+	pieceTexture2 = SDL_CreateTextureFromSurface(Renderer, pieceSurface2);
+	pieceTexture3 = SDL_CreateTextureFromSurface(Renderer, pieceSurface3);
+	pieceTexture4 = SDL_CreateTextureFromSurface(Renderer, pieceSurface4);
+	pieceTexture5 = SDL_CreateTextureFromSurface(Renderer, pieceSurface5);
+	pieceTexture6 = SDL_CreateTextureFromSurface(Renderer, pieceSurface6);
+	pieceTexture7 = SDL_CreateTextureFromSurface(Renderer, pieceSurface7);
+	pieceTexture8 = SDL_CreateTextureFromSurface(Renderer, pieceSurface8);
+	pieceTexture9 = SDL_CreateTextureFromSurface(Renderer, pieceSurface9);
+	pieceTexture10 = SDL_CreateTextureFromSurface(Renderer, pieceSurface10);
+	pieceTexture11 = SDL_CreateTextureFromSurface(Renderer, pieceSurface11);
+	pieceTexture12 = SDL_CreateTextureFromSurface(Renderer, pieceSurface12);
+	
+}
+
+SDL_Texture* Chess::GetPieceTexture(const int& textureNum)
+{
+	switch(textureNum)
+	{
+	case 1:
+		if (pieceTexture1)
+			return pieceTexture1;
+		break;
+	case 2:
+		if (pieceTexture2)
+			return pieceTexture2;
+		break;
+	case 3:
+		if (pieceTexture3)
+			return pieceTexture3;
+		break;
+	case 4:
+		if (pieceTexture4)
+			return pieceTexture4;
+		break;
+	case 5:
+		if (pieceTexture5)
+			return pieceTexture5;
+		break;
+	case 6:
+		if (pieceTexture6)
+			return pieceTexture6;
+		break;
+	case 7:
+		if (pieceTexture7)
+			return pieceTexture7;
+		break;
+	case 8:
+		if (pieceTexture8)
+			return pieceTexture8;
+		break;
+	case 9:
+		if (pieceTexture9)
+			return pieceTexture9;
+		break;
+	case 10:
+		if (pieceTexture10)
+			return pieceTexture10;
+		break;
+	case 11:
+		if (pieceTexture11)
+			return pieceTexture11;
+		break;
+	case 12:
+		if (pieceTexture12)
+			return pieceTexture12;
+		break;
+	default:
+		break;
+	}
+	return nullptr;
+}
+
+void DeletePieces()
 {
 	for (int i = 0; i < 64; i++)
 	{
@@ -511,21 +711,6 @@ void Chess::DrawChessBoard(SDL_Renderer* Renderer)
 				SDL_SetRenderDrawColor(Renderer, 119, 149, 86, 255);
 
 			SDL_RenderFillRect(Renderer, &temp1);
-		}
-	}
-}
-
-void Chess::DestroyAllPieceTextures()
-{
-	//Destroy All piece texture to free all the memory leaks
-	for (int i = 0; i < 64; i++)
-	{
-		if (boardPosition[i])
-		{
-			SDL_DestroyTexture(boardPosition[i]->GetPieceTexture());
-			SDL_FreeRW(boardPosition[i]->GetPieceRW());
-			SDL_FreeSurface(boardPosition[i]->GetPieceSurface());
-			boardPosition[i]->PossibleMovesVector().clear();
 		}
 	}
 }

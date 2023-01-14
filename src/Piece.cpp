@@ -1,3 +1,6 @@
+#include <chrono>
+#include <thread>
+
 //need these files for promotion stuff
 #include "Piece.h"
 #include "Pawn.h"
@@ -9,20 +12,6 @@
 
 #include <cmath>
 
-#include "C_Files/bishop.c"
-#include "C_Files/king.c"
-#include "C_Files/knight.c"
-#include "C_Files/pawn.c"
-#include "C_Files/queen.c"
-#include "C_Files/rook.c"
-
-#include "C_Files/bishop_bl.c"
-#include "C_Files/king_bl.c"
-#include "C_Files/knight_bl.c"
-#include "C_Files/pawn_bl.c"
-#include "C_Files/queen_bl.c"
-#include "C_Files/rook_bl.c"
-
 Piece::Piece(SDL_Renderer* Renderer, PieceType pieceType, bool pieceTeam, float xPos, float yPos)
 	:m_Renderer(Renderer), m_pieceType(pieceType), m_pieceTeam(pieceTeam), m_XPos(xPos), m_YPos(yPos)
 {
@@ -30,10 +19,6 @@ Piece::Piece(SDL_Renderer* Renderer, PieceType pieceType, bool pieceTeam, float 
 }
 Piece::~Piece()
 {
-	SDL_DestroyTexture(this->GetPieceTexture());
-	SDL_FreeRW(this->GetPieceRW());
-	SDL_FreeSurface(this->GetPieceSurface());
-	this->PossibleMovesVector().clear();
 }
 
 bool Piece::isBlackInCheck = false;
@@ -47,74 +32,66 @@ int Piece::enPassantEnd = 99;
 int Piece::castleBlockBlack[2] = { 99, 99 };
 int Piece::castleBlockWhite[2] = { 99, 99 };
 
+
 void Piece::RenderThePiece(SDL_Renderer* Renderer, const PieceType& pieceType, const bool& pieceTeam, const float& xPos, const float& yPos)
 {
-	//Rendering Piece
 	std::string fileName = "";
-	switch (this->m_pieceType)
+	int textureNum = 0;
+	//get piecetexture
+	switch (m_pieceType)
 	{
 	case PAWN:
 		fileName = "pawn";
-		if (!this->m_pieceTeam)
-			this->m_pieceRW = SDL_RWFromMem((void*)pawn_bl_png, sizeof(pawn_bl_png));
+		if (!m_pieceTeam)
+			textureNum = 1;
 		else
-			this->m_pieceRW = SDL_RWFromMem((void*)pawn_png, sizeof(pawn_png));
+			textureNum = 2;
 		break;
 	case KNIGHT:
 		fileName = "knight";
-		if (!this->m_pieceTeam)
-			this->m_pieceRW = SDL_RWFromMem((void*)knight_bl_png, sizeof(knight_bl_png));
+		if (!m_pieceTeam)
+			textureNum = 3;
 		else
-			this->m_pieceRW = SDL_RWFromMem((void*)knight_png, sizeof(knight_png));
+			textureNum = 4;
 		break;
 	case BISHOP:
 		fileName = "bishop";
-		if (!this->m_pieceTeam)
-			this->m_pieceRW = SDL_RWFromMem((void*)bishop_bl_png, sizeof(bishop_bl_png));
+		if (!m_pieceTeam)
+			textureNum = 5;
 		else
-			this->m_pieceRW = SDL_RWFromMem((void*)bishop_png, sizeof(bishop_png));
+			textureNum = 6;
 		break;
 	case ROOK:
 		fileName = "rook";
-		if (!this->m_pieceTeam)
-			this->m_pieceRW = SDL_RWFromMem((void*)rook_bl_png, sizeof(rook_bl_png));
+		if (!m_pieceTeam)
+			textureNum = 7;
 		else
-			this->m_pieceRW = SDL_RWFromMem((void*)rook_png, sizeof(rook_png));
+			textureNum = 8;
 		break;
 	case QUEEN:
 		fileName = "queen";
-		if (!this->m_pieceTeam)
-			this->m_pieceRW = SDL_RWFromMem((void*)queen_bl_png, sizeof(queen_bl_png));
+		if (!m_pieceTeam)
+			textureNum = 9;
 		else
-			this->m_pieceRW = SDL_RWFromMem((void*)queen_png, sizeof(queen_png));
+			textureNum = 10;
 		break;
 	case KING:
 		fileName = "king";
-		if (!this->m_pieceTeam)
-			this->m_pieceRW = SDL_RWFromMem((void*)king_bl_png, sizeof(king_bl_png));
+		if (!m_pieceTeam)
+			textureNum = 11;
 		else
-			this->m_pieceRW = SDL_RWFromMem((void*)king_png, sizeof(king_png));
+			textureNum = 12;
 		break;
 	default:
 		break;
 	}
-	//SDL_Surface* is set here
-	this->m_pieceSurface = IMG_Load_RW(this->m_pieceRW, 1);
-	if (!this->m_pieceSurface)
-	{
-		std::cout << "surf error\n";
-		if (!this->m_pieceTeam)
-			Chess::MissingTexture(false, fileName + "_bl.png");
-		else
-			Chess::MissingTexture(false, fileName + ".png");
-		return;
-	}
-	//SDL_Texture* is set here
-	this->m_pieceTexture = SDL_CreateTextureFromSurface(Renderer, this->m_pieceSurface);
-	if (!this->m_pieceTexture)
+
+	SDL_Texture* pieceTexture = Chess::GetPieceTexture(textureNum);
+	
+	if (!pieceTexture)
 	{
 		std::cout << "texture error\n";
-		if (!this->m_pieceTeam)
+		if (!m_pieceTeam)
 			Chess::MissingTexture(false, fileName + "_bl.png");
 		else
 			Chess::MissingTexture(false, fileName + ".png");
@@ -127,39 +104,42 @@ void Piece::RenderThePiece(SDL_Renderer* Renderer, const PieceType& pieceType, c
 	pieceRect.x = (int)(m_XPos * pieceRect.w);
 	pieceRect.y = (int)(m_YPos * pieceRect.h);
 
-	SDL_RenderCopy(Renderer, m_pieceTexture, nullptr, &pieceRect);
-
+	SDL_RenderCopy(Renderer, pieceTexture, nullptr, &pieceRect);
 }
 
 void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& currentTurn)
 {
-	if (currentTurn != this->GetPieceTeam())
+	if (currentTurn != GetPieceTeam())
 		return;
 	
-	int xStart = static_cast<int>(this->GetPieceX());
-	int yStart = static_cast<int>(this->GetPieceY());
+	int xStart = static_cast<int>(m_XPos);
+	int yStart = static_cast<int>(m_YPos);
 
 	int xEnd = Chess::GetBlockX(boardPositionToMove);
 	int yEnd = Chess::GetBlockY(boardPositionToMove);
 	
 	// Set the number of steps for the animation
-	float steps = 16.0f;
+	//better if it is power of 2
+	float steps = 64;
 
 	// Calculate the x and y step sizes for the animation
 	float xStep = (xEnd - xStart) / steps;
 	float yStep = (yEnd - yStart) / steps;
 
+	//std::cout << xStep << "   " << yStep << std::endl;
+
 	for (int i = 0; i < steps; i++)
 	{
-		this->AddToX(xStep);
-		this->AddToY(yStep);
+		m_XPos += xStep;
+		m_YPos += yStep;
 
-		//The piece is rerenderer here
+		//The piece is rerendered here
 		SDL_RenderClear(Renderer);
-		Chess::DestroyAllPieceTextures();
 		Chess::DrawChessBoard(Renderer);
 		Chess::RenderAllPiece(Renderer);
 		SDL_RenderPresent(Renderer);
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(2));
 	}
 
 	int startPosition = xStart + (yStart * 8);
@@ -190,7 +170,7 @@ void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& 
 	blocksMoved[1] = xEnd + yEnd * 8;
 	
 	//piece moved set to true
-	this->m_hasMoved = true;
+	m_hasMoved = true;
 
 	//change the turn
 	currentTurn = !currentTurn;
@@ -201,26 +181,26 @@ void Piece::MoveThePiece(SDL_Renderer* Renderer, int boardPositionToMove, bool& 
 void Piece::RenderPossMovesBlock(SDL_Renderer* Renderer)
 {
 	//Render the possible Moves Box here
-	for (int i = 0; i < this->PossibleMovesVector().size(); i++)
+	for (int i = 0; i < PossibleMovesVector().size(); i++)
 	{
-		SDL_Rect temp1{ Chess::GetBlockX(this->PossibleMovesVector()[i]) * (WIDTH / 8), Chess::GetBlockY(this->PossibleMovesVector()[i]) * (HEIGHT / 8),  WIDTH / 8 , HEIGHT / 8 };
+		SDL_Rect temp1{ Chess::GetBlockX(PossibleMovesVector()[i]) * (WIDTH / 8), Chess::GetBlockY(PossibleMovesVector()[i]) * (HEIGHT / 8),  WIDTH / 8 , HEIGHT / 8 };
 		//enemy piece found
-		if (boardPosition[this->PossibleMovesVector()[i]] && boardPosition[this->PossibleMovesVector()[i]]->GetPieceTeam() != this->GetPieceTeam())
+		if (boardPosition[PossibleMovesVector()[i]] && boardPosition[PossibleMovesVector()[i]]->GetPieceTeam() != GetPieceTeam())
 		{
 			SDL_SetRenderDrawColor(Renderer, 255, 20, 25, 128);
 		}
 		//coloring if we are caching the piece by enPassant
-		else if (Piece::enPassantEnd != 99 && !boardPosition[this->PossibleMovesVector()[i]] && Piece::enPassantEnd == this->PossibleMovesVector()[i])
+		else if (Piece::enPassantEnd != 99 && !boardPosition[PossibleMovesVector()[i]] && Piece::enPassantEnd == PossibleMovesVector()[i])
 		{
 			SDL_SetRenderDrawColor(Renderer, 115, 0, 247, 150);
 		}
 		//set castling piece color here
-		else if (this->GetPieceType() == KING && !boardPosition[this->PossibleMovesVector()[i]] && (this->PossibleMovesVector()[i] == Piece::castleBlockWhite[0] || this->PossibleMovesVector()[i] == Piece::castleBlockWhite[1] || this->PossibleMovesVector()[i] == Piece::castleBlockBlack[0] || this->PossibleMovesVector()[i] == Piece::castleBlockBlack[1]))
+		else if (this->GetPieceType() == KING && !boardPosition[PossibleMovesVector()[i]] && (PossibleMovesVector()[i] == Piece::castleBlockWhite[0] || PossibleMovesVector()[i] == Piece::castleBlockWhite[1] || PossibleMovesVector()[i] == Piece::castleBlockBlack[0] || PossibleMovesVector()[i] == Piece::castleBlockBlack[1]))
 		{
 			SDL_SetRenderDrawColor(Renderer, 115, 0, 247, 150);
 		}
 		//empty block found
-		else if (!boardPosition[this->PossibleMovesVector()[i]])
+		else if (!boardPosition[PossibleMovesVector()[i]])
 		{
 			SDL_SetRenderDrawColor(Renderer, 0, 255, 25, 128);
 		}
@@ -228,36 +208,35 @@ void Piece::RenderPossMovesBlock(SDL_Renderer* Renderer)
 	}
 }
 
-
 void Piece::SetKingVariables()
 {
 	std::vector<int> enemyPiece;
 
 	//if "this" is king then save position
-	if (this->GetPieceTeam() && this->GetPieceType() == KING)
-		Piece::whiteKingPos = static_cast<int>(this->GetPieceX()) + static_cast<int>(this->GetPieceY() * 8);
-	else if (!this->GetPieceTeam() && this->GetPieceType() == KING)
-		Piece::blackKingPos = static_cast<int>(this->GetPieceX()) + static_cast<int>(this->GetPieceY() * 8);
+	if (GetPieceTeam() && GetPieceType() == KING)
+		Piece::whiteKingPos = static_cast<int>(m_XPos) + static_cast<int>(m_XPos * 8);
+	else if (!GetPieceTeam() && GetPieceType() == KING)
+		Piece::blackKingPos = static_cast<int>(m_YPos) + static_cast<int>(m_YPos * 8);
 
 	//save the vars as false after a move has been performed
-	if (this->GetPieceTeam())
+	if (GetPieceTeam())
 		Piece::isWhiteInCheck = false;
 	else
 		Piece::isBlackInCheck = false;
 
 	//set check here by calculating enemy piece's next moves
 	enemyPiece.clear();
-	enemyPiece = this->CalculatePossibleMoves();
+	enemyPiece = CalculatePossibleMoves();
 	for (int i = 0; i < enemyPiece.size(); i++)
 	{
 		//white piece
-		if (this->GetPieceTeam() && enemyPiece[i] == blackKingPos)
+		if (GetPieceTeam() && enemyPiece[i] == blackKingPos)
 		{
 			std::cout << "Black King Checked at: " << Piece::blackKingPos << std::endl;
 			Piece::isBlackInCheck = true;
 		}
 		//black piece
-		else if (!this->GetPieceTeam() && enemyPiece[i] == whiteKingPos)
+		else if (!GetPieceTeam() && enemyPiece[i] == whiteKingPos)
 		{
 			std::cout << "White King Checked at: " << Piece::whiteKingPos << std::endl;
 			Piece::isWhiteInCheck = true;
@@ -282,13 +261,13 @@ bool Piece::EndGameReached()
 
 	for (int i = 0; i < 64; i++)
 	{
-		if (boardPosition[i] && this->GetPieceTeam() != boardPosition[i]->GetPieceTeam())
+		if (boardPosition[i] && GetPieceTeam() != boardPosition[i]->GetPieceTeam())
 		{
 			//6 is a light bishop
 			if (boardPosition[i]->GetPieceType() == BISHOP)
 			{
-				int x = static_cast<int>(boardPosition[i]->GetPieceX());
-				int y = static_cast<int>(boardPosition[i]->GetPieceY());
+				int x = static_cast<int>(boardPosition[i]->m_XPos);
+				int y = static_cast<int>(boardPosition[i]->m_YPos);
 
 				//light bishops (even)
 				if ((y % 2) == (x + (y * 8)) % 2)
@@ -303,7 +282,7 @@ bool Piece::EndGameReached()
 			
 			boardPosition[i]->CalculateLegitMoves();
 			//White Piece so Black King is under danger
-			if (this->GetPieceTeam())
+			if (GetPieceTeam())
 			{
 				//this variable just counts our pieces
 				tempVar1++;
@@ -316,7 +295,7 @@ bool Piece::EndGameReached()
 			}
 
 			//Black Piece so White King is under danger
-			else if (!this->GetPieceTeam())
+			else if (!GetPieceTeam())
 			{
 				//this variable just counts our pieces
 				tempVar1++;
@@ -330,13 +309,13 @@ bool Piece::EndGameReached()
 
 			boardPosition[i]->PossibleMovesVector().clear();
 		}
-		else if (boardPosition[i] && this->GetPieceTeam() == boardPosition[i]->GetPieceTeam())
+		else if (boardPosition[i] && GetPieceTeam() == boardPosition[i]->GetPieceTeam())
 		{
 			//6 is a light bishop
 			if (boardPosition[i]->GetPieceType() == BISHOP)
 			{
-				int x = static_cast<int>(boardPosition[i]->GetPieceX());
-				int y = static_cast<int>(boardPosition[i]->GetPieceY());
+				int x = static_cast<int>(boardPosition[i]->m_XPos);
+				int y = static_cast<int>(boardPosition[i]->m_YPos);
 
 				//light bishops (even)
 				if ((y % 2) == (x + (y * 8)) % 2)
@@ -419,16 +398,16 @@ bool Piece::EndGameReached()
 
 void Piece::CalculateLegitMoves()
 {
-	this->PossibleMovesVector().clear();
+	PossibleMovesVector().clear();
 	std::vector<int> friendlyPieceMoves;
 	friendlyPieceMoves.clear();
-	friendlyPieceMoves = this->CalculatePossibleMoves();
+	friendlyPieceMoves = CalculatePossibleMoves();
 
 	for (int i = 0; i < friendlyPieceMoves.size(); i++)
 	{
 		//checks if our move puts our king in danger and also sacrifices to save the king
-		if (this->IsLegitMove(friendlyPieceMoves[i]))
-			this->PossibleMovesVector().push_back(friendlyPieceMoves[i]);
+		if (IsLegitMove(friendlyPieceMoves[i]))
+			PossibleMovesVector().push_back(friendlyPieceMoves[i]);
 	}
 }
 
@@ -437,8 +416,8 @@ bool Piece::IsLegitMove(const int& pieceMove)
 	std::vector<int> enemyPieceMoves;
 	Piece* tempPiece = nullptr;
 
-	int x = static_cast<int>(this->GetPieceX());
-	int y = static_cast<int>(this->GetPieceY());
+	int x = static_cast<int>(m_XPos);
+	int y = static_cast<int>(m_YPos);
 	bool legalMove = true;
 
 	//if enemy piece is present then store it temporarily
@@ -454,18 +433,18 @@ bool Piece::IsLegitMove(const int& pieceMove)
 	for (int i = 0; i < 64; i++)
 	{
 		//can this enemy piece attack my king?
-		if (boardPosition[i] && this->GetPieceTeam() != boardPosition[i]->GetPieceTeam())
+		if (boardPosition[i] && GetPieceTeam() != boardPosition[i]->GetPieceTeam())
 		{
 			enemyPieceMoves = boardPosition[i]->CalculatePossibleMoves();
 			for (int j = 0; j < enemyPieceMoves.size(); j++)
 			{
-				if (this->GetPieceType() != KING && ((this->GetPieceTeam() && enemyPieceMoves[j] == Piece::whiteKingPos) || (!this->GetPieceTeam() && enemyPieceMoves[j] == Piece::blackKingPos)))
+				if (GetPieceType() != KING && ((GetPieceTeam() && enemyPieceMoves[j] == Piece::whiteKingPos) || (!this->GetPieceTeam() && enemyPieceMoves[j] == Piece::blackKingPos)))
 				{
 					legalMove = false;
 					i = 64;
 					break;
 				}
-				else if (this->GetPieceType() == KING && enemyPieceMoves[j] == pieceMove)
+				else if (GetPieceType() == KING && enemyPieceMoves[j] == pieceMove)
 				{
 					legalMove = false;
 					i = 64;
@@ -491,10 +470,10 @@ bool Piece::IsLegitMove(const int& pieceMove)
 void Piece::SetEnPassant(const int& xStart, const int& yStart, const int& x, const int& y)
 {
 	//take out enemy by enPassant
-	if (this->GetPieceType() == PAWN && (Piece::enPassant == xStart + (yStart * 8) || Piece::enPassant == (xStart + (yStart * 8)) * 100))
+	if (GetPieceType() == PAWN && (Piece::enPassant == xStart + (yStart * 8) || Piece::enPassant == (xStart + (yStart * 8)) * 100))
 	{
 		//White Pawn took Black by enPassant
-		if (this->GetPieceTeam())
+		if (GetPieceTeam())
 		{
 			delete boardPosition[x + ((y + 1) * 8)];
 			boardPosition[x + ((y + 1) * 8)] = nullptr;
@@ -520,24 +499,24 @@ void Piece::SetEnPassant(const int& xStart, const int& yStart, const int& x, con
 	}
 
 	//if "this" can be captured by enPassant then save it
-	else if (!this->HasPieceMoved() && this->GetPieceType() == PAWN && (this->GetPieceTeam() && y == 4 || !this->GetPieceTeam() && y == 3))
+	else if (!HasPieceMoved() && GetPieceType() == PAWN && (GetPieceTeam() && y == 4 || !GetPieceTeam() && y == 3))
 	{
 		//piece on right of board
-		if (boardPosition[(x + 1) + (y * 8)] && boardPosition[(x + 1) + (y * 8)]->GetPieceTeam() != this->GetPieceTeam() && boardPosition[(x + 1) + (y * 8)]->GetPieceType() == PAWN)
+		if (boardPosition[(x + 1) + (y * 8)] && boardPosition[(x + 1) + (y * 8)]->GetPieceTeam() != GetPieceTeam() && boardPosition[(x + 1) + (y * 8)]->GetPieceType() == PAWN)
 		{
 			Piece::enPassant = ((x + 1) + (y * 8));
 			
-			if (this->GetPieceTeam())
+			if (GetPieceTeam())
 				Piece::enPassantEnd = x + (y + 1) * 8;
 			else
 				Piece::enPassantEnd = x + (y - 1) * 8;
 		}
 		//piece on left of board
-		else if (boardPosition[(x - 1) + (y * 8)] && boardPosition[(x - 1) + (y * 8)]->GetPieceTeam() != this->GetPieceTeam() && boardPosition[(x - 1) + (y * 8)]->GetPieceType() == PAWN)
+		else if (boardPosition[(x - 1) + (y * 8)] && boardPosition[(x - 1) + (y * 8)]->GetPieceTeam() != GetPieceTeam() && boardPosition[(x - 1) + (y * 8)]->GetPieceType() == PAWN)
 		{
 			Piece::enPassant = ((x - 1) + (y * 8)) * 100;
 			
-			if (this->GetPieceTeam())
+			if (GetPieceTeam())
 				Piece::enPassantEnd = x + (y + 1) * 8;
 			else
 				Piece::enPassantEnd = x + (y - 1) * 8;
@@ -548,7 +527,7 @@ void Piece::SetEnPassant(const int& xStart, const int& yStart, const int& x, con
 void Piece::SetCastling(SDL_Renderer* Renderer, const int& x, const int& y, bool& currentTurn)
 {
 	// White Team Castle
-	if (this->GetPieceType() == KING && this->GetPieceTeam() && (Piece::castleBlockWhite[0] != 99 || Piece::castleBlockWhite[1] != 99))
+	if (GetPieceType() == KING && GetPieceTeam() && (Piece::castleBlockWhite[0] != 99 || Piece::castleBlockWhite[1] != 99))
 	{
 		//on left hand side
 		if (x == Chess::GetBlockX(Piece::castleBlockWhite[0]))
@@ -572,7 +551,7 @@ void Piece::SetCastling(SDL_Renderer* Renderer, const int& x, const int& y, bool
 		}
 	}
 	// Black Team Castle
-	else if (this->GetPieceType() == KING && !this->GetPieceTeam() && (Piece::castleBlockBlack[0] != 99 || Piece::castleBlockBlack[1] != 99))
+	else if (GetPieceType() == KING && !GetPieceTeam() && (Piece::castleBlockBlack[0] != 99 || Piece::castleBlockBlack[1] != 99))
 	{
 		//on left hand side
 		if (x == Chess::GetBlockX(Piece::castleBlockBlack[0]))
@@ -599,78 +578,54 @@ void Piece::SetCastling(SDL_Renderer* Renderer, const int& x, const int& y, bool
 void Piece::SetPawnPromotion(SDL_Renderer* Renderer, const int& x, const int& y)
 {
 	//since pawns dont move back so only checking boundary conditions
-	if (this->GetPieceType() == PAWN &&  (y == 0 || y == 7))
+	if (GetPieceType() == PAWN &&  (y == 0 || y == 7))
 	{
 		Chess::AddGaussianBlur(Renderer);
+
+		SDL_Texture* tempTexture1 = nullptr;
+		SDL_Texture* tempTexture2 = nullptr;
+		SDL_Texture* tempTexture3 = nullptr;
+		SDL_Texture* tempTexture4 = nullptr;
 
 		SDL_Rect pieceRect{};
 		pieceRect.w = WIDTH / 8;
 		pieceRect.h = HEIGHT / 8;
 		pieceRect.y = 3 * pieceRect.h;
 
-		//queen image
+		//Queen image
 		pieceRect.x = 2 * pieceRect.w;
-		SDL_RWops* tempRwops1;
-		if (this->GetPieceTeam())
-			tempRwops1 = SDL_RWFromMem((void*)queen_png, sizeof(queen_png));
+		if (GetPieceTeam())
+			tempTexture1 = Chess::GetPieceTexture(10);
 		else
-			tempRwops1 = SDL_RWFromMem((void*)queen_bl_png, sizeof(queen_bl_png));
-		SDL_Surface* tempSurface1 = IMG_Load_RW(tempRwops1, 1);
-		SDL_Texture* tempTexture1 = SDL_CreateTextureFromSurface(Renderer, tempSurface1);
+			tempTexture1 = Chess::GetPieceTexture(9);
 		SDL_RenderCopy(Renderer, tempTexture1, nullptr, &pieceRect);
 
 		//Bishop
 		pieceRect.x = 3 * pieceRect.w;
-		SDL_RWops* tempRwops2;
-		if (this->GetPieceTeam())
-			tempRwops2 = SDL_RWFromMem((void*)bishop_png, sizeof(bishop_png));
+		if (GetPieceTeam())
+			tempTexture2 = Chess::GetPieceTexture(6);
 		else
-			tempRwops2 = SDL_RWFromMem((void*)bishop_bl_png, sizeof(bishop_bl_png));
-		SDL_Surface* tempSurface2 = IMG_Load_RW(tempRwops2, 1);
-		SDL_Texture* tempTexture2 = SDL_CreateTextureFromSurface(Renderer, tempSurface2);
+			tempTexture2 = Chess::GetPieceTexture(5);
 		SDL_RenderCopy(Renderer, tempTexture2, nullptr, &pieceRect);
 
 		//Knight
 		pieceRect.x = 4 * pieceRect.w;
-		SDL_RWops* tempRwops3;
-		if (this->GetPieceTeam())
-			tempRwops3 = SDL_RWFromMem((void*)knight_png, sizeof(knight_png));
+		if (GetPieceTeam())
+			tempTexture3 = Chess::GetPieceTexture(4);
 		else
-			tempRwops3 = SDL_RWFromMem((void*)knight_bl_png, sizeof(knight_bl_png));
-		SDL_Surface* tempSurface3 = IMG_Load_RW(tempRwops3, 1);
-		SDL_Texture* tempTexture3 = SDL_CreateTextureFromSurface(Renderer, tempSurface3);
+			tempTexture3 = Chess::GetPieceTexture(3);
 		SDL_RenderCopy(Renderer, tempTexture3, nullptr, &pieceRect);
 
 		//Rook
 		pieceRect.x = 5 * pieceRect.w;
-		SDL_RWops* tempRwops4;
-		if (this->GetPieceTeam())
-			tempRwops4 = SDL_RWFromMem((void*)rook_png, sizeof(rook_png));
+		if (GetPieceTeam())
+			tempTexture4 = Chess::GetPieceTexture(8);
 		else
-			tempRwops4 = SDL_RWFromMem((void*)rook_bl_png, sizeof(rook_bl_png));
-		SDL_Surface* tempSurface4 = IMG_Load_RW(tempRwops4, 1);
-		SDL_Texture* tempTexture4 = SDL_CreateTextureFromSurface(Renderer, tempSurface4);
+			tempTexture4 = Chess::GetPieceTexture(7);
 		SDL_RenderCopy(Renderer, tempTexture4, nullptr, &pieceRect);
-		
-		//Free Stuff
-		SDL_DestroyTexture(tempTexture1);
-		SDL_FreeRW(tempRwops1);
-		SDL_FreeSurface(tempSurface1);
-
-		SDL_DestroyTexture(tempTexture2);
-		SDL_FreeRW(tempRwops2);
-		SDL_FreeSurface(tempSurface2);
-
-		SDL_DestroyTexture(tempTexture3);
-		SDL_FreeRW(tempRwops3);
-		SDL_FreeSurface(tempSurface3);
-
-		SDL_DestroyTexture(tempTexture4);
-		SDL_FreeRW(tempRwops4);
-		SDL_FreeSurface(tempSurface4);
 
 		SDL_RenderPresent(Renderer);
-		
+
 		//set game state to promotion
 		promotion = x + y * 8;
 	}

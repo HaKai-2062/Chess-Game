@@ -23,13 +23,13 @@ namespace Chess
 	void MissingTexture(bool, std::string);
 	void RenderAllPiece(SDL_Renderer*);
 	void DrawChessBoard(SDL_Renderer*);
-	void DestroyAllPieceTextures();
 
 	int GetBlockX(const int&);
 	int GetBlockY(const int&);
 	float Lerp(const int&, const int&, const float&);
 	void AddGaussianBlur(SDL_Renderer*);
 	void HighlightBlockMoved(SDL_Renderer*, const int&, const int&);
+	SDL_Texture* GetPieceTexture(const int&);
 }
 
 static const int WIDTH = 800;

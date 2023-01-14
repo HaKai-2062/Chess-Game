@@ -8,23 +8,20 @@ King::King(SDL_Renderer* m_Renderer, bool m_pieceTeam, float m_XPos, float m_YPo
 
 King::~King()
 {
-	SDL_DestroyTexture(this->GetPieceTexture());
-	SDL_FreeRW(this->GetPieceRW());
-	SDL_FreeSurface(this->GetPieceSurface());
-	this->PossibleMovesVector().clear();
+	PossibleMovesVector().clear();
 }
 
 void King::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
-	this->CalculateLegitMoves();
+	CalculateLegitMoves();
 	King::PushCastlingMove(this->PossibleMovesVector());
-	this->RenderPossMovesBlock(Renderer);
+	RenderPossMovesBlock(Renderer);
 }
 
 std::vector<int> King::CalculatePossibleMoves()
 {
-	int x = static_cast<int>(this->GetPieceX());
-	int y = static_cast<int>(this->GetPieceY());
+	int x = static_cast<int>(m_XPos);
+	int y = static_cast<int>(m_YPos);
 	std::vector<int> possibleMoves;
 
 	int arrayX[8] = { x, x, x - 1, x + 1, x + 1, x + 1, x - 1, x - 1 };
@@ -35,7 +32,7 @@ std::vector<int> King::CalculatePossibleMoves()
 	{
 		if (arrayX[i] > -1 && arrayX[i] < 8 && arrayY[i] > -1 && arrayY[i] < 8)
 		{
-			if (!boardPosition[arrayX[i] + arrayY[i] * 8] || (boardPosition[arrayX[i] + arrayY[i] * 8]->GetPieceTeam() != this->GetPieceTeam()))
+			if (!boardPosition[arrayX[i] + arrayY[i] * 8] || (boardPosition[arrayX[i] + arrayY[i] * 8]->GetPieceTeam() != GetPieceTeam()))
 				possibleMoves.push_back(arrayX[i] + arrayY[i] * 8);
 		}
 	}
@@ -45,15 +42,15 @@ std::vector<int> King::CalculatePossibleMoves()
 
 void King::PushCastlingMove(std::vector<int>& possibleMoves)
 {
-	int x = static_cast<int>(this->GetPieceX());
-	int y = static_cast<int>(this->GetPieceY());
+	int x = static_cast<int>(m_XPos);
+	int y = static_cast<int>(m_YPos);
 
 	std::vector<int> enemyPossMoves;
 	bool canCastleOnLeft = true;
 	bool canCastleOnRight = true;
 
 	//is king under check?
-	if ((this->GetPieceTeam() && Piece::isWhiteInCheck) || (!this->GetPieceTeam() && Piece::isBlackInCheck))
+	if ((GetPieceTeam() && Piece::isWhiteInCheck) || (!GetPieceTeam() && Piece::isBlackInCheck))
 	{
 		canCastleOnLeft = false;
 		canCastleOnRight = false;
@@ -62,7 +59,7 @@ void King::PushCastlingMove(std::vector<int>& possibleMoves)
 
 	
 	//castle on left side (alwaays going to be the long castle)
-	if (this->GetPieceType() == KING && !this->HasPieceMoved() && boardPosition[0 + y * 8] && !boardPosition[0 + y * 8]->HasPieceMoved() && canCastleOnLeft)
+	if (GetPieceType() == KING && !HasPieceMoved() && boardPosition[0 + y * 8] && !boardPosition[0 + y * 8]->HasPieceMoved() && canCastleOnLeft)
 	{
 		//no piece from 1 to king's pos
 		for (int i = 1; i < x; i++)
@@ -78,7 +75,7 @@ void King::PushCastlingMove(std::vector<int>& possibleMoves)
 		//check only x -1 and x - 2 whether it is under attack or not
 		for (int i = 0; i < 64; i++)
 		{
-			if (boardPosition[i] && this->GetPieceTeam() != boardPosition[i]->GetPieceTeam())
+			if (boardPosition[i] && GetPieceTeam() != boardPosition[i]->GetPieceTeam())
 			{
 				//should have used CalculateLegitMoves but there was an infinite loop and this should work fine since after mating enemy we cant legally get a turn
 				enemyPossMoves.clear();
@@ -98,7 +95,7 @@ void King::PushCastlingMove(std::vector<int>& possibleMoves)
 		}
 		if (canCastleOnLeft)
 		{
-			if (this->GetPieceTeam())
+			if (GetPieceTeam())
 			{
 				castleBlockWhite[0] = ((x - 2) + (y * 8));
 				possibleMoves.push_back((x - 2) + (y * 8));
@@ -113,7 +110,7 @@ void King::PushCastlingMove(std::vector<int>& possibleMoves)
 
 
 	//castle on left side (alwaays going to be the long castle)
-	if (this->GetPieceType() == KING && !this->HasPieceMoved() && boardPosition[7 + y * 8] && !boardPosition[7 + y * 8]->HasPieceMoved() && canCastleOnRight)
+	if (GetPieceType() == KING && !HasPieceMoved() && boardPosition[7 + y * 8] && !boardPosition[7 + y * 8]->HasPieceMoved() && canCastleOnRight)
 	{
 		//no piece from king's pos to rook
 		for (int i = x + 1; i < 7; i++)
@@ -129,7 +126,7 @@ void King::PushCastlingMove(std::vector<int>& possibleMoves)
 		//check only x+1 and x+2 whether it is under attack or not
 		for (int i = 0; i < 64; i++)
 		{
-			if (boardPosition[i] && this->GetPieceTeam() != boardPosition[i]->GetPieceTeam())
+			if (boardPosition[i] && GetPieceTeam() != boardPosition[i]->GetPieceTeam())
 			{
 				//should have used CalculateLegitMoves but there was an infinite loop and this should work fine since after being mated we cant legally get a turn
 				enemyPossMoves.clear();
@@ -149,7 +146,7 @@ void King::PushCastlingMove(std::vector<int>& possibleMoves)
 		}
 		if (canCastleOnRight)
 		{
-			if (this->GetPieceTeam())
+			if (GetPieceTeam())
 			{
 				castleBlockWhite[1] = ((x + 2) + (y * 8));
 				possibleMoves.push_back((x + 2) + (y * 8));

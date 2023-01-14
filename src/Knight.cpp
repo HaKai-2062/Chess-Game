@@ -8,22 +8,19 @@ Knight::Knight(SDL_Renderer * m_Renderer, bool m_pieceTeam, float m_XPos, float 
 
 Knight::~Knight()
 {
-	SDL_DestroyTexture(this->GetPieceTexture());
-	SDL_FreeRW(this->GetPieceRW());
-	SDL_FreeSurface(this->GetPieceSurface());
-	this->PossibleMovesVector().clear();
+	PossibleMovesVector().clear();
 }
 
 void Knight::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
-	this->CalculateLegitMoves();
-	this->RenderPossMovesBlock(Renderer);
+	CalculateLegitMoves();
+	RenderPossMovesBlock(Renderer);
 }
 
 std::vector<int> Knight::CalculatePossibleMoves()
 {
-	int x = static_cast<int>(this->GetPieceX());
-	int y = static_cast<int>(this->GetPieceY());
+	int x = static_cast<int>(m_XPos);
+	int y = static_cast<int>(m_YPos);
 	std::vector<int> possibleMoves;
 
 	int arrayX[8] = { x + 2, x + 2, x + 1, x + 1, x - 1, x - 1, x - 2, x - 2 };
@@ -34,7 +31,7 @@ std::vector<int> Knight::CalculatePossibleMoves()
 	{
 		if (arrayX[i] > -1 && arrayX[i] < 8 && arrayY[i] > -1 && arrayY[i] < 8)
 		{
-			if (!boardPosition[arrayX[i] + arrayY[i] * 8] || (boardPosition[arrayX[i] + arrayY[i] * 8]->GetPieceTeam() != this->GetPieceTeam()))
+			if (!boardPosition[arrayX[i] + arrayY[i] * 8] || (boardPosition[arrayX[i] + arrayY[i] * 8]->GetPieceTeam() != GetPieceTeam()))
 				possibleMoves.push_back(arrayX[i] + arrayY[i] * 8);
 		}
 	}

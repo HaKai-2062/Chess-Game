@@ -8,22 +8,19 @@ Bishop::Bishop(SDL_Renderer* m_Renderer, bool m_pieceTeam, float m_XPos, float m
 
 Bishop::~Bishop()
 {
-	SDL_DestroyTexture(this->GetPieceTexture());
-	SDL_FreeRW(this->GetPieceRW());
-	SDL_FreeSurface(this->GetPieceSurface());
-	this->PossibleMovesVector().clear();
+	PossibleMovesVector().clear();
 }
 
 void Bishop::RenderPossibleMoves(SDL_Renderer* Renderer)
 {
-	this->CalculateLegitMoves();
-	this->RenderPossMovesBlock(Renderer);
+	CalculateLegitMoves();
+	RenderPossMovesBlock(Renderer);
 }
 
 std::vector<int> Bishop::CalculatePossibleMoves()
 {
-	int x = static_cast<int>(this->GetPieceX());
-	int y = static_cast<int>(this->GetPieceY());
+	int x = static_cast<int>(m_XPos);
+	int y = static_cast<int>(m_YPos);
 	std::vector<int> possibleMoves;
 
 	int arrayX[4] = { x + 1, x + 1, x - 1, x - 1 };
@@ -38,14 +35,14 @@ std::vector<int> Bishop::CalculatePossibleMoves()
 			if (!boardPosition[arrayX[i] + (arrayY[i] * 8)])
 				possibleMoves.push_back(arrayX[i] + (arrayY[i] * 8));
 			//if enemy piece present
-			else if (boardPosition[arrayX[i] + (arrayY[i] * 8)] && boardPosition[arrayX[i] + (arrayY[i] * 8)]->GetPieceTeam() != this->GetPieceTeam())
+			else if (boardPosition[arrayX[i] + (arrayY[i] * 8)] && boardPosition[arrayX[i] + (arrayY[i] * 8)]->GetPieceTeam() != GetPieceTeam())
 			{
 				possibleMoves.push_back(arrayX[i] + (arrayY[i] * 8));
 				//no need to loop further in row
 				break;
 			}
 			//same team so break loop
-			else if (boardPosition[arrayX[i] + (arrayY[i] * 8)] && boardPosition[arrayX[i] + (arrayY[i] * 8)]->GetPieceTeam() == this->GetPieceTeam())
+			else if (boardPosition[arrayX[i] + (arrayY[i] * 8)] && boardPosition[arrayX[i] + (arrayY[i] * 8)]->GetPieceTeam() == GetPieceTeam())
 				break;
 
 			if (i == 0)

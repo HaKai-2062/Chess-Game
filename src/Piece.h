@@ -16,8 +16,6 @@ public:
 	void AddToY(const float& y) { this->m_YPos = this->m_YPos + y; }
 
 	SDL_Texture* GetPieceTexture() { return this->m_pieceTexture; }
-	SDL_RWops* GetPieceRW() { return this->m_pieceRW; }
-	SDL_Surface* GetPieceSurface() { return this->m_pieceSurface; }
 	std::vector<int>& PossibleMovesVector() { return this->m_possMoves; }
 	
 	void RenderThePiece(SDL_Renderer*, const PieceType&, const bool&, const float&, const float&);
@@ -34,9 +32,6 @@ public:
 	virtual std::vector<int> CalculatePossibleMoves() = 0;
 	void CalculateLegitMoves();
 	bool IsLegitMove(const int&);
-	//virtual void calculatePossibleMoves(SDL_Renderer*, const bool&, const int&, const int&) = 0;
-	//virtual bool isValidMove() = 0;
-	//virtual void moveThePiece(int, int) = 0;
 
 	//construction or destrction
 	Piece(SDL_Renderer*, PieceType, bool, float, float);
@@ -55,16 +50,14 @@ protected:
 	//to castle both left and right side of king
 	static int castleBlockBlack[2];
 	static int castleBlockWhite[2];
+	float m_XPos = 0, m_YPos = 0;
 
 private:
 	SDL_Renderer* m_Renderer = nullptr;
-	SDL_RWops* m_pieceRW = nullptr;
-	SDL_Surface* m_pieceSurface = nullptr;
 	SDL_Texture* m_pieceTexture = nullptr;
 	PieceType m_pieceType = PAWN;
 	std::vector<int> m_possMoves;
 
-	float m_XPos = 0, m_YPos = 0;
 	//true = white
 	bool m_pieceTeam = false;
 	bool m_hasMoved = false;
