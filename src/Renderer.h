@@ -34,8 +34,9 @@ namespace Chess
 
 static const int WIDTH = 800;
 static const int HEIGHT = 800;
-//0 = game running, 1 = white checkmated black, 2 = black checkmated white, 3 = stalemate, 4 = deaposition, 5 = game start
+//0 = game running, 1 = white checkmated black, 2 = black checkmated white, 3 = stalemate, 4 = deaposition
 extern int gameEnded;
+//0-63 is block number for promotion, 99 is default
 extern int promotion;
 extern int blocksMoved[2];
 

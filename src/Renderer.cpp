@@ -43,7 +43,9 @@
 */
 
 void MouseButtonPressed(SDL_Renderer*, bool& hasRenderedPossMove, const SDL_Event&, bool&);
-void ButtonSelection(SDL_Renderer*, const SDL_Event&, bool);
+void StartButton(SDL_Renderer*, const SDL_Event&, bool&);
+void RestartButton(SDL_Renderer*, const SDL_Event&);
+void PromoteButton(SDL_Renderer* Renderer, const SDL_Event& gameEvent, bool currentTurn);
 void CreatePieceTextures(SDL_Renderer*);
 void DeletePieces();
 
@@ -123,12 +125,13 @@ void Chess::MainRenderer()
 	SDL_SetWindowIcon(Window, iconSurface);
 	SDL_SetRenderDrawBlendMode(Renderer, SDL_BLENDMODE_BLEND);
 
-	//ChessBoard
+	//not clearing renderer can cause issues
 	SDL_RenderClear(Renderer);
-	Chess::DrawChessBoard(Renderer);
-	SDL_RenderPresent(Renderer);
+	SDL_FreeRW(iconRW);
+	SDL_FreeSurface(iconSurface);
 
 	bool initialRun = true;
+	bool playButtonStart = false;
 	SDL_Event gameEvent;
 	while (1)
 	{
@@ -165,7 +168,7 @@ void Chess::MainRenderer()
 				SDL_RWops* tempRwops1 = SDL_RWFromMem((void*)game_start_png, sizeof(game_start_png));
 				SDL_Surface* tempSurface1 = IMG_Load_RW(tempRwops1, 1);
 				SDL_Texture* tempTexture1 = SDL_CreateTextureFromSurface(Renderer, tempSurface1);
-				promotion = 100;
+				playButtonStart = true;
 
 				SDL_RenderCopy(Renderer, tempTexture1, nullptr, &pieceRect);
 				SDL_RenderPresent(Renderer);
@@ -174,13 +177,21 @@ void Chess::MainRenderer()
 				SDL_FreeSurface(tempSurface1);
 			}
 
-			if (gameEvent.type == SDL_MOUSEBUTTONDOWN && !gameEnded && promotion == 99)
+			if (gameEvent.type == SDL_MOUSEBUTTONDOWN && !gameEnded && promotion == 99 && !playButtonStart)
 			{
 				MouseButtonPressed(Renderer, hasRenderedPossMoves, gameEvent, currentTurn);
 			}
+			else if (gameEvent.type == SDL_MOUSEBUTTONDOWN && playButtonStart)
+			{
+				StartButton(Renderer, gameEvent, playButtonStart);
+			}
+			else if (gameEvent.type == SDL_MOUSEBUTTONDOWN && (gameEnded == 1 || gameEnded == 2 || gameEnded == 3 || gameEnded == 4))
+			{
+				RestartButton(Renderer, gameEvent);
+			}
 			else if (gameEvent.type == SDL_MOUSEBUTTONDOWN && promotion != 99)
 			{
-				ButtonSelection(Renderer, gameEvent, currentTurn);
+				PromoteButton(Renderer, gameEvent, currentTurn);
 			}
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -190,8 +201,6 @@ void Chess::MainRenderer()
 	DeletePieces();
 	delete[] boardPosition;
 
-	SDL_FreeRW(iconRW);
-	SDL_FreeSurface(iconSurface);
 	SDL_DestroyRenderer(Renderer);
 	SDL_DestroyWindow(Window);
 
@@ -470,8 +479,6 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 							SDL_RWops* tempRwops4 = SDL_RWFromMem((void*)game_start_png, sizeof(game_start_png));
 							SDL_Surface* tempSurface4 = IMG_Load_RW(tempRwops4, 1);
 							SDL_Texture* tempTexture4 = SDL_CreateTextureFromSurface(Renderer, tempSurface4);
-							//promotion 101 is set for resetting the game
-							promotion = 101;
 							
 							SDL_RenderCopy(Renderer, tempTexture4, nullptr, &pieceRect);
 							SDL_DestroyTexture(tempTexture4);
@@ -491,89 +498,93 @@ void MouseButtonPressed(SDL_Renderer* Renderer, bool& hasRenderedPossMoves, cons
 	}
 }
 
-void ButtonSelection(SDL_Renderer* Renderer, const SDL_Event& gameEvent, bool currentTurn)
+
+void StartButton(SDL_Renderer* Renderer, const SDL_Event& gameEvent, bool& playButtonStart)
+{
+	int xBlockStart = (WIDTH / 8) * 3;
+	int xBlockEnd = (WIDTH / 8) * 5;
+	int yBlockStart = (HEIGHT / 8) * 5;
+	int yBlockEnd = (HEIGHT / 8) * 7;
+
+	//this is the start screen
+	if (gameEvent.button.x > xBlockStart && gameEvent.button.x <= xBlockEnd && gameEvent.button.y > yBlockStart && gameEvent.button.y <= yBlockEnd)
+	{
+		//Clear and Rerender stuff
+		SDL_RenderClear(Renderer);
+		Chess::DrawChessBoard(Renderer);
+		Chess::RenderAllPiece(Renderer);
+		SDL_RenderPresent(Renderer);
+		playButtonStart = false;
+	}
+}
+
+void RestartButton(SDL_Renderer* Renderer, const SDL_Event& gameEvent)
+{
+	int xBlockStart = (WIDTH / 8) * 3;
+	int xBlockEnd = (WIDTH / 8) * 5;
+	int yBlockStart = (HEIGHT / 8) * 5;
+	int yBlockEnd = (HEIGHT / 8) * 7;
+
+	if (gameEvent.button.x > xBlockStart && gameEvent.button.x <= xBlockEnd && gameEvent.button.y > yBlockStart && gameEvent.button.y <= yBlockEnd)
+	{
+		SDL_RenderClear(Renderer);
+		DeletePieces();
+		Chess::DrawChessBoard(Renderer);
+		Chess::Init(Renderer);
+		SDL_RenderPresent(Renderer);
+		//restart the game
+		gameEnded = 0;
+		promotion = 99;
+	}
+}
+
+void PromoteButton(SDL_Renderer* Renderer, const SDL_Event& gameEvent, bool currentTurn)
 {
 	int xBlockStart;
 	int xBlockEnd;
 	int yBlockStart;
 	int yBlockEnd;
-	if (promotion != 100 && promotion != 101)
-	{
-		for (int mouseX = 2; mouseX < 6; mouseX++)
-		{
-			xBlockStart = (WIDTH / 8) * mouseX;
-			xBlockEnd = (WIDTH / 8) * (mouseX + 1);
-			yBlockStart = (HEIGHT / 8) * 3;
-			yBlockEnd = (HEIGHT / 8) * 4;
 
-			//if Moves havent been rendered yet then render them, promotion to 100 means start screen
-			if (gameEvent.button.x > xBlockStart && gameEvent.button.x <= xBlockEnd && gameEvent.button.y > yBlockStart && gameEvent.button.y <= yBlockEnd)
+	for (int mouseX = 2; mouseX < 6; mouseX++)
+	{
+		xBlockStart = (WIDTH / 8) * mouseX;
+		xBlockEnd = (WIDTH / 8) * (mouseX + 1);
+		yBlockStart = (HEIGHT / 8) * 3;
+		yBlockEnd = (HEIGHT / 8) * 4;
+
+		//if Moves havent been rendered yet then render them, promotion to 100 means start screen
+		if (gameEvent.button.x > xBlockStart && gameEvent.button.x <= xBlockEnd && gameEvent.button.y > yBlockStart && gameEvent.button.y <= yBlockEnd)
+		{
+			//piece must exist or something fishy
+			if (boardPosition[promotion])
+				delete boardPosition[promotion];
+
+			if (mouseX == 2)
 			{
-				//piece must exist or something fishy
-				if (boardPosition[promotion])
-					delete boardPosition[promotion];
-
-				if (mouseX == 2)
-				{
-					boardPosition[promotion] = new Queen(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
-				}
-				else if (mouseX == 3)
-				{
-					boardPosition[promotion] = new Bishop(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
-				}
-				else if (mouseX == 4)
-				{
-					boardPosition[promotion] = new Knight(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
-				}
-				else if (mouseX == 5)
-				{
-					boardPosition[promotion] = new Rook(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
-
-				}
-
-				//Clear and Rerender stuff
-				SDL_RenderClear(Renderer);
-				Chess::DrawChessBoard(Renderer);
-				Chess::RenderAllPiece(Renderer);
-				SDL_RenderPresent(Renderer);
-				promotion = 99;
-				break;
+				boardPosition[promotion] = new Queen(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
 			}
-		}
-	}
+			else if (mouseX == 3)
+			{
+				boardPosition[promotion] = new Bishop(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
+			}
+			else if (mouseX == 4)
+			{
+				boardPosition[promotion] = new Knight(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
+			}
+			else if (mouseX == 5)
+			{
+				boardPosition[promotion] = new Rook(Renderer, !currentTurn, (float)Chess::GetBlockX(promotion), (float)Chess::GetBlockY(promotion));
+			}
 
-	//this is the start screen
-	if (promotion == 100 || promotion == 101)
-	{
-		xBlockStart = (WIDTH / 8) * 3;
-		xBlockEnd = (WIDTH / 8) * 5;
-		yBlockStart = (HEIGHT / 8) * 5;
-		yBlockEnd = (HEIGHT / 8) * 7;
-
-
-		if (promotion == 100 && gameEvent.button.x > xBlockStart && gameEvent.button.x <= xBlockEnd && gameEvent.button.y > yBlockStart && gameEvent.button.y <= yBlockEnd)
-		{
 			//Clear and Rerender stuff
 			SDL_RenderClear(Renderer);
 			Chess::DrawChessBoard(Renderer);
 			Chess::RenderAllPiece(Renderer);
 			SDL_RenderPresent(Renderer);
 			promotion = 99;
-		}
-		else if (promotion == 101 && gameEvent.button.x > xBlockStart && gameEvent.button.x <= xBlockEnd && gameEvent.button.y > yBlockStart && gameEvent.button.y <= yBlockEnd)
-		{
-			//Clear and Rerender stuff
-			SDL_RenderClear(Renderer);
-			DeletePieces();
-			Chess::DrawChessBoard(Renderer);
-			Chess::Init(Renderer);
-			SDL_RenderPresent(Renderer);
-			//restart the game
-			gameEnded = 0;
-			promotion = 99;
+			break;
 		}
 	}
-
 }
 
 void CreatePieceTextures(SDL_Renderer* Renderer)
