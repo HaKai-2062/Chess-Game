@@ -30,6 +30,8 @@
     <ClCompile Include="src\Rook.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="resource1.h" />
     <ClInclude Include="src\Bishop.h" />
     <ClInclude Include="src\King.h" />
     <ClInclude Include="src\Knight.h" />
@@ -40,7 +42,10 @@
     <ClInclude Include="src\Rook.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Resoucre Files\icon.ico" />
+    <ResourceCompile Include="Chess The Game.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resource_Files\icon.ico" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

@@ -64,8 +64,17 @@
     <ClInclude Include="src\Bishop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Resoucre Files\icon.ico" />
+    <ResourceCompile Include="Chess The Game.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resource_Files\icon.ico" />
   </ItemGroup>
 </Project>
