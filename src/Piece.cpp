@@ -413,6 +413,9 @@ void Piece::CalculateLegitMoves()
 
 bool Piece::IsLegitMove(const int& pieceMove)
 {
+
+	std::cout << "wtf\n";
+
 	std::vector<int> enemyPieceMoves;
 	Piece* tempPiece = nullptr;
 
@@ -432,18 +435,18 @@ bool Piece::IsLegitMove(const int& pieceMove)
 	for (int i = 0; i < 64; i++)
 	{
 		//can this enemy piece attack my king?
-		if (boardPosition[i] && GetPieceTeam() != boardPosition[i]->GetPieceTeam())
+		if (boardPosition[i] && this->GetPieceTeam() != boardPosition[i]->GetPieceTeam())
 		{
 			enemyPieceMoves = boardPosition[i]->CalculatePossibleMoves();
 			for (int j = 0; j < enemyPieceMoves.size(); j++)
 			{
-				if (GetPieceType() != KING && ((GetPieceTeam() && enemyPieceMoves[j] == Piece::whiteKingPos) || (!GetPieceTeam() && enemyPieceMoves[j] == Piece::blackKingPos)))
+				if (this->GetPieceType() != KING && ((this->GetPieceTeam() && enemyPieceMoves[j] == Piece::whiteKingPos) || (!this->GetPieceTeam() && enemyPieceMoves[j] == Piece::blackKingPos)))
 				{
 					legalMove = false;
 					i = 64;
 					break;
 				}
-				else if (GetPieceType() == KING && enemyPieceMoves[j] == pieceMove)
+				else if (this->GetPieceType() == KING && enemyPieceMoves[j] == pieceMove)
 				{
 					legalMove = false;
 					i = 64;

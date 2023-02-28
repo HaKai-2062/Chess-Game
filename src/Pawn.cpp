@@ -52,11 +52,31 @@ std::vector<int> Pawn::CalculatePossibleMoves()
 		//EnPassasnt Logic
 		if (x - 1 > -1 && y + 1 < 8 && Piece::enPassant != 99 && Piece::enPassant == x + (y * 8) && !boardPosition[(x - 1) + (y + 1) * 8] && boardPosition[(x - 1) + y * 8] && boardPosition[(x - 1) + y * 8]->GetPieceType() == PAWN)
 		{
-			possibleMoves.push_back((x - 1) + ((y + 1) * 8));
+			//save enemy piece and evaluate if my enPassant is good
+			Piece* tempPiece = boardPosition[(x - 1) + y * 8];
+			boardPosition[(x - 1) + y * 8] = nullptr;
+
+			if (boardPosition[x + y * 8]->IsLegitMove((x - 1) + ((y + 1) * 8)))
+				possibleMoves.push_back((x - 1) + ((y + 1) * 8));
+
+			if (tempPiece)
+				boardPosition[(x - 1) + y * 8] = tempPiece;
+
+			tempPiece = nullptr;
 		}
 		else if (x + 1 < 8 && y + 1 < 8 && Piece::enPassant != 99 && Piece::enPassant == (x + (y * 8)) * 100 && !boardPosition[(x + 1) + (y + 1) * 8] && boardPosition[(x + 1) + y * 8] && boardPosition[(x + 1) + y * 8]->GetPieceType() == PAWN)
 		{
-			possibleMoves.push_back((x + 1) + ((y + 1) * 8));
+			//save enemy piece and evaluate if my enPassant is good
+			Piece* tempPiece = boardPosition[(x + 1) + y * 8];
+			boardPosition[(x + 1) + y * 8] = nullptr;
+
+			if (boardPosition[x + y * 8]->IsLegitMove((x + 1) + ((y + 1) * 8)))
+				possibleMoves.push_back((x + 1) + ((y + 1) * 8));
+
+			if (tempPiece)
+				boardPosition[(x + 1) + y * 8] = tempPiece;
+
+			tempPiece = nullptr;
 		}
 	}
 
@@ -87,11 +107,31 @@ std::vector<int> Pawn::CalculatePossibleMoves()
 		//EnPassasnt Logic
 		if (x - 1 > -1 && y - 1 > -1 && Piece::enPassant != 99 && Piece::enPassant == x + (y * 8) && !boardPosition[(x - 1) + (y - 1) * 8] && boardPosition[(x - 1) + y * 8] && boardPosition[(x - 1) + y * 8]->GetPieceType() == PAWN)
 		{
-			possibleMoves.push_back((x - 1) + ((y - 1) * 8));
+			//save enemy piece and evaluate if my enPassant is good
+			Piece* tempPiece = boardPosition[(x - 1) + y * 8];
+			boardPosition[(x - 1) + y * 8] = nullptr;
+
+			if (boardPosition[x + y * 8]->IsLegitMove((x - 1) + ((y - 1) * 8)))
+				possibleMoves.push_back((x - 1) + ((y - 1) * 8));
+
+			if (tempPiece)
+				boardPosition[(x - 1) + y * 8] = tempPiece;
+
+			tempPiece = nullptr;
 		}
 		else if (x + 1 < 8 && y - 1 > -1 && Piece::enPassant != 99 && Piece::enPassant == (x + (y * 8)) * 100 && !boardPosition[(x + 1) + (y - 1) * 8] && boardPosition[(x + 1) + y * 8] && boardPosition[(x + 1) + y * 8]->GetPieceType() == PAWN)
 		{
-			possibleMoves.push_back((x + 1) + ((y - 1) * 8));
+			//save enemy piece and evaluate if my enPassant is good
+			Piece* tempPiece = boardPosition[(x + 1) + y * 8];
+			boardPosition[(x + 1) + y * 8] = nullptr;
+
+			if (boardPosition[x + y * 8]->IsLegitMove((x + 1) + ((y - 1) * 8)))
+				possibleMoves.push_back((x + 1) + ((y - 1) * 8));
+
+			if (tempPiece)
+				boardPosition[(x + 1) + y * 8] = tempPiece;
+
+			tempPiece = nullptr;
 		}
 	}
 	return possibleMoves;

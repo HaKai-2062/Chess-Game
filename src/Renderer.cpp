@@ -104,10 +104,6 @@ static SDL_Texture* pieceTexture12 = nullptr;
 
 void Chess::MainRenderer()
 {
-	bool hasRenderedPossMoves = false;
-	//true = white false = black
-	bool currentTurn = true;
-
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		return;
 
@@ -132,6 +128,10 @@ void Chess::MainRenderer()
 
 	bool initialRun = true;
 	bool playButtonStart = false;
+	bool hasRenderedPossMoves = false;
+	//true = white false = black
+	bool currentTurn = true;
+
 	SDL_Event gameEvent;
 	while (1)
 	{
