@@ -1,0 +1,49 @@
+# CMakeList.txt : CMake project for CMakeProject2, include source and define
+# project specific logic here.
+#
+cmake_minimum_required (VERSION 3.8)
+
+# Enable Hot Reload for MSVC compilers if supported.
+if (POLICY CMP0141)
+  cmake_policy(SET CMP0141 NEW)
+  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+endif()
+
+project ("Chess")
+
+# Add source to this project's executable.
+file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS 
+"${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+
+add_executable("${CMAKE_PROJECT_NAME}")
+
+set_property(TARGET "${CMAKE_PROJECT_NAME}" PROPERTY CXX_STANDARD 20)
+
+target_sources("${CMAKE_PROJECT_NAME}" PRIVATE ${MY_SOURCES})
+
+
+if(MSVC) # If using the VS compiler...
+
+	set_target_properties(${BUILD_TARGET} PROPERTIES LINK_FLAGS "/PROFILE") # for profiling
+
+	#target_compile_definitions("${CMAKE_PROJECT_NAME}" PUBLIC _CRT_SECURE_NO_WARNINGS)		# secure function warnings
+
+	#set_target_properties("${CMAKE_PROJECT_NAME}" PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup") #no console
+	
+	#set_property(TARGET "${CMAKE_PROJECT_NAME}" PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreadedDebug<$<CONFIG:Debug>:Debug>")
+	#set_property(TARGET "${CMAKE_PROJECT_NAME}" PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
+
+endif()
+
+target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC 
+"${CMAKE_CURRENT_SOURCE_DIR}/src"
+"${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/include/")
+
+target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE 
+"${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/lib/SDL2/SDL2_image.lib"
+"${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/lib/SDL2/SDL2main.lib"
+"${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/lib/SDL2/SDL2.lib"
+"winmm"
+"version"
+"Setupapi"
+"Imm32")

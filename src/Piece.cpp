@@ -413,9 +413,6 @@ void Piece::CalculateLegitMoves()
 
 bool Piece::IsLegitMove(const int& pieceMove)
 {
-
-	std::cout << "wtf\n";
-
 	std::vector<int> enemyPieceMoves;
 	Piece* tempPiece = nullptr;
 
